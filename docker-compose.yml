@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - GROQ_API_KEY=
+      - ADMIN_PASSWORD=
+      - JWT_SECRET=
+      - DATABASE_URL=sqlite:///./safari_pro.db

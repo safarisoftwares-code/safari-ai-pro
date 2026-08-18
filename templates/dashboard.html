@@ -1,0 +1,82 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard - Safari AI Pro</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.dashboard-body{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+.dashboard-container{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.2);padding:40px;width:100%;max-width:600px}
+.dashboard-container h1{color:#8b4513;font-size:24px;margin-bottom:20px;text-align:center}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin-bottom:30px}
+.stat-card{background:#faf5f0;padding:20px;border-radius:12px;text-align:center;border:1px solid #e0c8a8}
+.stat-card h3{color:#d2691e;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.stat-card .num{color:#8b4513;font-size:28px;font-weight:bold}
+.info-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0e0d0;font-size:14px}
+.info-row span:first-child{color:#888}
+.info-row span:last-child{color:#8b4513;font-weight:bold}
+.btn-row{display:flex;gap:10px;margin-top:20px}
+.btn{flex:1;padding:12px;border-radius:10px;text-align:center;text-decoration:none;font-weight:bold;font-size:14px;cursor:pointer;border:none}
+.btn-primary{background:#d2691e;color:#fff}
+.btn-primary:hover{background:#8b4513}
+.btn-secondary{background:#f0e0d0;color:#8b4513}
+.btn-secondary:hover{background:#e0c8a8}
+.usage-bar{width:100%;height:8px;background:#e0c8a8;border-radius:4px;margin-top:8px;overflow:hidden}
+.usage-fill{height:100%;background:#d2691e;border-radius:4px;transition:width .3s}
+</style>
+</head>
+<body class="dashboard-body">
+<div class="dashboard-container">
+<h1>&#x1F981; Safari AI Pro Dashboard</h1>
+<div class="stats-grid">
+<div class="stat-card"><h3>Plan</h3><div class="num" id="planDisplay">-</div></div>
+<div class="stat-card"><h3>Queries Today</h3><div class="num" id="queriesToday">-</div></div>
+<div class="stat-card"><h3>Total Queries</h3><div class="num" id="totalQueries">-</div></div>
+<div class="stat-card"><h3>Daily Limit</h3><div class="num" id="dailyLimit">-</div></div>
+</div>
+<h3 style="color:#8b4513;margin-bottom:10px">Usage Today</h3>
+<div class="usage-bar"><div class="usage-fill" id="usageFill" style="width:0%"></div></div>
+<p style="text-align:center;margin-top:5px;font-size:12px;color:#888" id="usageText"></p>
+<h3 style="color:#8b4513;margin:20px 0 10px">Account Info</h3>
+<div id="accountInfo"></div>
+<div class="btn-row">
+<a href="/" class="btn btn-primary">Back to Chat</a>
+<button class="btn btn-secondary" onclick="logoutUser()">Logout</button>
+</div>
+</div>
+<script>
+function logoutUser(){localStorage.removeItem('safari_token');localStorage.removeItem('safari_name');window.location.href='/';}
+async function loadDashboard(){
+    var token=localStorage.getItem('safari_token');
+    if(!token){window.location.href='/login';return;}
+    try{
+        var r=await fetch('/api/v1/auth/me?token='+encodeURIComponent(token));
+        var d=await r.json();
+        if(d.status==='success'){
+            var user=d.user;
+            document.getElementById('planDisplay').textContent=user.plan.toUpperCase();
+            document.getElementById('queriesToday').textContent=user.queries_today;
+            document.getElementById('totalQueries').textContent=user.total_queries;
+            document.getElementById('dailyLimit').textContent=user.daily_limit;
+            
+            var pct=user.daily_limit>0?Math.min(100,(user.queries_today/user.daily_limit)*100):0;
+            document.getElementById('usageFill').style.width=pct+'%';
+            document.getElementById('usageText').textContent=user.queries_today+' of '+user.daily_limit+' queries used ('+Math.round(pct)+'%)';
+            
+            document.getElementById('accountInfo').innerHTML=
+                '<div class="info-row"><span>Name</span><span>'+user.name+'</span></div>'+
+                '<div class="info-row"><span>Email</span><span>'+user.email+'</span></div>'+
+                '<div class="info-row"><span>Member Since</span><span>'+(user.created_at||'N/A')+'</span></div>'+
+                '<div class="info-row"><span>Status</span><span>'+(user.is_banned?'Banned':'Active')+'</span></div>';
+        }else{
+            window.location.href='/login';
+        }
+    }catch(e){
+        console.error(e);
+    }
+}
+document.addEventListener('DOMContentLoaded',loadDashboard);
+</script>
+</body>
+</html>

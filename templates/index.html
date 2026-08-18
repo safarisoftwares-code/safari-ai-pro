@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Safari AI Pro - Explore Beyond Limits</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="c">
+<div class="h">
+<span style="font-size:32px">&#x1F981;</span>
+<div style="flex:1;"><h1>Safari AI Pro</h1><p>Explore Beyond Limits</p></div>
+<div class="h-right">
+<span class="guest-badge" id="guestBadge">Guest: 8 queries left</span>
+<span id="userName" style="font-size:13px;"></span>
+<a href="/login" id="loginLink">Login</a>
+<button id="logoutBtn" onclick="logoutUser()" style="display:none;">Logout</button>
+</div>
+</div>
+<div class="tabs-container">
+<div class="tabs" id="tabs"></div>
+<button class="export-btn" onclick="exportChat()" title="Export">&#x1F4E5;</button>
+</div>
+<div id="b"></div>
+<div class="typing-indicator" id="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
+<div class="i">
+<label for="fileInput" class="attach-btn" title="Attach document">&#128206;</label>
+<button class="attach-btn" id="micBtn" title="Voice input" onclick="startRecording()" style="background:#e8f5e9;">&#127908;</button>
+<div class="file-preview" id="filePreview" style="display:none;">&#128206; <span id="fileName">file.txt</span><button type="button" class="clear-attach-btn" onclick="clearAttachment()">x</button></div>
+<input type="file" id="fileInput" accept=".txt,.md,.csv,.json,.py,.log,.pdf,.docx" style="display:none;" onchange="selectFile(this)">
+<input id="q" placeholder="Type your question or attach a file..." autofocus onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();ask()}">
+<button id="askBtn" onclick="ask()">Ask</button>
+</div>
+<div class="f">2026 Safari Softwares | <a href="/terms">Terms</a> | <a href="/privacy">Privacy</a> | <a href="/pricing">Pricing</a> | <a href="/admin">Admin</a> | <a href="/dashboard">Dashboard</a></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="/static/js/chat.js"></script>
+</body>
+</html>
