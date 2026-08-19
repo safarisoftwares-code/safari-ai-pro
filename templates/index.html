@@ -16,12 +16,19 @@
 <span class="guest-badge" id="guestBadge">Guest: 8 queries left</span>
 <span id="userName" style="font-size:13px;"></span>
 <a href="/login" id="loginLink">Login</a>
+<a href="/profile" id="profileLink" style="display:none;">Profile</a>
 <button id="logoutBtn" onclick="logoutUser()" style="display:none;">Logout</button>
 </div>
 </div>
+<div class="search-bar" id="searchBar" style="display:none;">
+<input type="text" id="searchInput" placeholder="Search in chat history..." oninput="searchChats(this.value)">
+<button onclick="closeSearch()" style="background:none;border:none;cursor:pointer;font-size:18px;color:#888;">&times;</button>
+</div>
+<div class="search-results" id="searchResults" style="display:none;"></div>
 <div class="tabs-container">
 <div class="tabs" id="tabs"></div>
-<button class="export-btn" onclick="exportChat()" title="Export">&#x1F4E5;</button>
+<button class="search-btn" onclick="toggleSearch()" title="Search">&#x1F50D;</button>
+<button class="export-btn" onclick="showExportMenu()" title="Export">&#x1F4E5;</button>
 </div>
 <div id="b"></div>
 <div class="typing-indicator" id="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>

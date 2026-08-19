@@ -1,4 +1,4 @@
-import time
+﻿import time
 from collections import defaultdict
 from typing import Dict, List
 from fastapi import Request, HTTPException
@@ -14,12 +14,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         client_id = request.client.host if request.client else "unknown"
 
-        if request.url.path == "/ask":
+        if request.url.path == "/ask" or request.url.path == "/api/v1/chat/ask":
             now = time.time()
             self.requests[client_id] = [t for t in self.requests[client_id] if now - t < 60]
 
             if len(self.requests[client_id]) >= settings.RATE_LIMIT_PER_MINUTE:
-                raise HTTPException(status_code=429, detail="Rate limit exceeded. Please wait a moment.")
+                raise HTTPException(
+                    status_code=429,
+                    detail="Rate limit exceeded. Please wait a moment."
+                )
 
             self.requests[client_id].append(now)
 

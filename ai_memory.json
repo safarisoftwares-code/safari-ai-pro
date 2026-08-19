@@ -1,0 +1,9 @@
+{
+  "users": {
+    "safari.ai.agent@gmail.com": {
+      "name": "My",
+      "interest": "My name is John and I like Python"
+    }
+  },
+  "global": {}
+}

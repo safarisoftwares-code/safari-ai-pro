@@ -1,0 +1,204 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Profile - Safari AI Pro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;padding:20px;min-height:100vh;display:flex;justify-content:center;align-items:center}
+.c{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.15);padding:35px;width:100%;max-width:600px}
+h1{color:#8b4513;font-size:24px;margin-bottom:5px;text-align:center}
+.subtitle{color:#888;text-align:center;margin-bottom:25px;font-size:13px}
+.avatar-section{text-align:center;margin-bottom:25px}
+.avatar{width:80px;height:80px;background:#d2691e;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:36px;font-weight:bold;margin-bottom:10px}
+.avatar-name{font-size:18px;font-weight:bold;color:#333}
+.avatar-email{font-size:13px;color:#888}
+.tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:2px solid #f0e0d0}
+.tab-btn{flex:1;padding:10px;border:none;background:transparent;color:#888;cursor:pointer;font-weight:bold;font-size:13px;border-bottom:3px solid transparent}
+.tab-btn.active{color:#d2691e;border-bottom-color:#d2691e}
+.form-section{display:none}
+.form-section.active{display:block}
+label{display:block;margin-bottom:6px;color:#555;font-weight:600;font-size:13px}
+input{padding:12px;margin-bottom:15px;width:100%;border:2px solid #e0c8a8;border-radius:10px;font-size:14px;outline:0}
+input:focus{border-color:#d2691e}
+button{background:#d2691e;color:#fff;border:0;padding:12px 20px;border-radius:10px;cursor:pointer;font-weight:bold;width:100%;font-size:14px}
+button:hover{background:#8b4513}
+.msg{margin-top:12px;text-align:center;font-size:13px;display:none}
+.msg.success{color:#2e7d32;display:block}
+.msg.error{color:#d32f2f;display:block}
+.btn-row{display:flex;gap:10px;margin-top:15px}
+.btn-secondary{background:#f0e0d0;color:#8b4513}
+.btn-secondary:hover{background:#e0c8a8}
+.btn-danger{background:#ffebee;color:#d32f2f}
+.btn-danger:hover{background:#ffcdd2}
+.back-link{display:block;text-align:center;margin-top:15px;color:#d2691e;text-decoration:none;font-size:13px}
+</style>
+</head>
+<body>
+<div class="c">
+<h1>&#x1F981; Profile Settings</h1>
+<p class="subtitle">Manage your Safari AI Pro account</p>
+
+<div class="avatar-section">
+<div class="avatar" id="avatarLetter">U</div>
+<div class="avatar-name" id="profileName">Loading...</div>
+<div class="avatar-email" id="profileEmail">...</div>
+</div>
+
+<div class="tabs">
+<button class="tab-btn active" onclick="showTab('nameTab','nameSection')">Name</button>
+<button class="tab-btn" onclick="showTab('passwordTab','passwordSection')">Password</button>
+<button class="tab-btn" onclick="showTab('dangerTab','dangerSection')">Danger Zone</button>
+</div>
+
+<div class="form-section active" id="nameSection">
+<label>Full Name</label>
+<input type="text" id="editName" placeholder="Your name">
+<button onclick="updateName()">Update Name</button>
+<div class="msg" id="nameMsg"></div>
+</div>
+
+<div class="form-section" id="passwordSection">
+<label>Current Password</label>
+<input type="password" id="currentPassword" placeholder="Enter current password">
+<label>New Password</label>
+<input type="password" id="newPassword" placeholder="Enter new password (min 4 chars)">
+<label>Confirm New Password</label>
+<input type="password" id="confirmPassword" placeholder="Confirm new password">
+<button onclick="changePassword()">Change Password</button>
+<div class="msg" id="passwordMsg"></div>
+</div>
+
+<div class="form-section" id="dangerSection">
+<p style="color:#d32f2f;font-size:13px;margin-bottom:15px">Deleting your account will permanently remove all your data including chat history. This cannot be undone.</p>
+<button class="btn-danger" onclick="deleteAccount()">Delete My Account</button>
+<div class="msg" id="dangerMsg"></div>
+</div>
+
+<div class="btn-row">
+<a href="/dashboard" style="flex:1;text-decoration:none"><button class="btn-secondary" style="width:100%">Dashboard</button></a>
+<a href="/" style="flex:1;text-decoration:none"><button class="btn-secondary" style="width:100%">Back to Chat</button></a>
+</div>
+</div>
+
+<script>
+function showTab(btnId, sectionId){
+    var btns=document.querySelectorAll('.tab-btn');
+    btns.forEach(function(b){b.classList.remove('active');});
+    document.getElementById(btnId).classList.add('active');
+    
+    var sections=document.querySelectorAll('.form-section');
+    sections.forEach(function(s){s.classList.remove('active');});
+    document.getElementById(sectionId).classList.add('active');
+}
+
+async function loadProfile(){
+    var token=localStorage.getItem('safari_token');
+    if(!token){window.location.href='/login';return;}
+    
+    try{
+        var r=await fetch('/api/v1/auth/me?token='+encodeURIComponent(token));
+        var d=await r.json();
+        if(d.status==='success'){
+            var user=d.user;
+            document.getElementById('avatarLetter').textContent=user.name.charAt(0).toUpperCase();
+            document.getElementById('profileName').textContent=user.name;
+            document.getElementById('profileEmail').textContent=user.email;
+            document.getElementById('editName').value=user.name;
+        }else{
+            window.location.href='/login';
+        }
+    }catch(e){}
+}
+
+async function updateName(){
+    var token=localStorage.getItem('safari_token');
+    var name=document.getElementById('editName').value.trim();
+    if(!name){showMsg('nameMsg','Name cannot be empty.','error');return;}
+    
+    var fd=new FormData();
+    fd.append('token',token);
+    fd.append('name',name);
+    
+    var r=await fetch('/api/v1/auth/update-profile',{method:'POST',body:fd});
+    var d=await r.json();
+    
+    if(d.status==='success'){
+        localStorage.setItem('safari_name',name);
+        document.getElementById('avatarLetter').textContent=name.charAt(0).toUpperCase();
+        document.getElementById('profileName').textContent=name;
+        showMsg('nameMsg','Name updated successfully!','success');
+    }else{
+        showMsg('nameMsg',d.message||'Error updating name.','error');
+    }
+}
+
+async function changePassword(){
+    var token=localStorage.getItem('safari_token');
+    var current=document.getElementById('currentPassword').value;
+    var newPass=document.getElementById('newPassword').value;
+    var confirm=document.getElementById('confirmPassword').value;
+    
+    if(!current||!newPass||!confirm){
+        showMsg('passwordMsg','All fields are required.','error');
+        return;
+    }
+    if(newPass.length<4){
+        showMsg('passwordMsg','New password must be at least 4 characters.','error');
+        return;
+    }
+    if(newPass!==confirm){
+        showMsg('passwordMsg','New passwords do not match.','error');
+        return;
+    }
+    
+    var fd=new FormData();
+    fd.append('token',token);
+    fd.append('current_password',current);
+    fd.append('new_password',newPass);
+    
+    var r=await fetch('/api/v1/auth/change-password',{method:'POST',body:fd});
+    var d=await r.json();
+    
+    if(d.status==='success'){
+        showMsg('passwordMsg','Password changed successfully!','success');
+        document.getElementById('currentPassword').value='';
+        document.getElementById('newPassword').value='';
+        document.getElementById('confirmPassword').value='';
+    }else{
+        showMsg('passwordMsg',d.message||'Error changing password.','error');
+    }
+}
+
+async function deleteAccount(){
+    if(!confirm('Are you sure? This will delete ALL your data permanently.')) return;
+    if(!confirm('Final confirmation: This CANNOT be undone. Delete account?')) return;
+    
+    var token=localStorage.getItem('safari_token');
+    var fd=new FormData();
+    fd.append('token',token);
+    
+    var r=await fetch('/api/v1/auth/delete',{method:'POST',body:fd});
+    var d=await r.json();
+    
+    if(d.status==='success'){
+        localStorage.removeItem('safari_token');
+        localStorage.removeItem('safari_name');
+        alert('Account deleted. Goodbye!');
+        window.location.href='/';
+    }else{
+        showMsg('dangerMsg',d.message||'Error deleting account.','error');
+    }
+}
+
+function showMsg(elementId, text, type){
+    var el=document.getElementById(elementId);
+    el.textContent=text;
+    el.className='msg '+type;
+}
+
+document.addEventListener('DOMContentLoaded',loadProfile);
+</script>
+</body>
+</html>

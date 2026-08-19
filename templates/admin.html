@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin Panel - Safari AI Pro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;padding:20px;min-height:100vh}
+.c{max-width:1300px;margin:auto;background:#fff;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,.15);padding:30px}
+h1{color:#8b4513;font-size:28px;margin-bottom:5px}
+.subtitle{color:#888;margin-bottom:25px;font-size:14px}
+.header-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.btn-logout{background:#555;color:#fff;border:0;padding:8px 16px;cursor:pointer;border-radius:6px;font-size:13px;text-decoration:none;display:inline-block}
+.stats{display:flex;gap:15px;margin-bottom:25px;flex-wrap:wrap}
+.stat-card{background:#faf5f0;padding:20px;border-radius:12px;text-align:center;min-width:120px;flex:1;border:1px solid #e0c8a8}
+.stat-card h3{color:#d2691e;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.stat-card .num{color:#8b4513;font-size:30px;font-weight:bold}
+.form-section{background:#faf5f0;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e0c8a8}
+.form-section h3{color:#8b4513;margin-bottom:15px;font-size:16px}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.form-row input,.form-row select{padding:10px;border:2px solid #d2691e;border-radius:8px;font-size:14px;outline:0;flex:1;min-width:150px}
+.form-row button{background:#d2691e;color:#fff;border:0;padding:10px 20px;cursor:pointer;border-radius:8px;font-weight:bold;font-size:14px;white-space:nowrap}
+.form-row button:hover{background:#8b4513}
+table{width:100%;border-collapse:collapse;margin:15px 0;font-size:13px}
+th{background:#d2691e;color:#fff;padding:10px;text-align:left;border:1px solid #e0c8a8;font-size:12px;text-transform:uppercase;letter-spacing:0.5px}
+td{padding:10px;border:1px solid #e0c8a8}
+tr:hover{background:#faf5f0}
+.plan-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold;letter-spacing:1px}
+.plan-free{background:#e8f5e9;color:#2e7d32}
+.plan-pro{background:#e3f2fd;color:#1565c0}
+.plan-enterprise{background:#fce4ec;color:#c62828}
+.status-active{color:#2e7d32;font-weight:bold}
+.status-banned{color:#d32f2f;font-weight:bold}
+.btn-ban{background:#d32f2f;color:#fff;border:0;padding:5px 12px;cursor:pointer;border-radius:5px;font-size:12px;text-decoration:none;display:inline-block}
+.btn-unban{background:#2e7d32;color:#fff;border:0;padding:5px 12px;cursor:pointer;border-radius:5px;font-size:12px;text-decoration:none;display:inline-block}
+.btn-revoke{background:#d32f2f;color:#fff;border:0;padding:5px 12px;cursor:pointer;border-radius:5px;font-size:12px}
+.btn-revoke:hover{background:#b71c1c}
+code{background:#f0e0d0;padding:3px 8px;border-radius:4px;font-size:12px;font-family:'Consolas',monospace}
+.section-title{color:#8b4513;font-size:18px;margin:25px 0 10px;border-bottom:2px solid #f0e0d0;padding-bottom:5px}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:25px;font-size:14px;opacity:0;transition:opacity .3s;z-index:1000;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="c">
+<div class="header-row">
+<div><h1>&#x1F981; Safari AI Pro Admin</h1><p class="subtitle">User & API Key Management Dashboard</p></div>
+<a href="/" class="btn-logout">Exit Admin</a>
+</div>
+
+<div class="stats">
+<div class="stat-card"><h3>Total Users</h3><div class="num">{{TOTAL_USERS}}</div></div>
+<div class="stat-card"><h3>Free Users</h3><div class="num">{{FREE_USERS}}</div></div>
+<div class="stat-card"><h3>Pro Users</h3><div class="num">{{PRO_USERS}}</div></div>
+<div class="stat-card"><h3>Enterprise</h3><div class="num">{{ENTERPRISE_USERS}}</div></div>
+<div class="stat-card"><h3>Banned</h3><div class="num">{{BANNED_USERS}}</div></div>
+<div class="stat-card"><h3>API Keys</h3><div class="num">{{API_KEY_COUNT}}</div></div>
+</div>
+
+<div class="form-section">
+<h3>Generate New API Key</h3>
+<form method="post" action="/admin/generate" style="margin:0">
+<div class="form-row">
+<input type="hidden" name="pw" value="{{PW}}">
+<input type="email" name="email" placeholder="User email address" required>
+<select name="plan">
+<option value="free">Free (10/day)</option>
+<option value="pro">Pro (1,000/day)</option>
+<option value="enterprise">Enterprise (10,000/day)</option>
+</select>
+<button type="submit">Generate Key</button>
+</div>
+</form>
+</div>
+
+<h2 class="section-title">Login Accounts</h2>
+<table>
+<tr><th>Name</th><th>Email</th><th>Plan</th><th>Queries Today</th><th>Total Queries</th><th>Status</th><th>Actions</th></tr>
+{{LOGIN_ACCOUNT_ROWS}}
+</table>
+
+<h2 class="section-title">API Key Users</h2>
+<table>
+<tr><th>Email</th><th>Plan</th><th>Usage Today</th><th>Total Queries</th><th>API Key</th><th>Action</th></tr>
+{{API_USER_ROWS}}
+</table>
+
+<div style="display:flex;justify-content:space-between;margin-top:20px;align-items:center">
+<a href="/admin?pw={{PW}}" style="color:#d2691e;text-decoration:none;font-weight:bold">Refresh Data</a>
+<form method="post" action="/admin/logout" style="display:inline">
+<button type="submit" class="btn-logout">Logout</button>
+</form>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3000);}
+</script>
+</body>
+</html>

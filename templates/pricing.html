@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Pricing - Safari AI Pro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;padding:40px 20px;min-height:100vh;display:flex;justify-content:center;align-items:center}
+.c{max-width:1100px;width:100%}
+h1{color:#8b4513;text-align:center;font-size:32px;margin-bottom:10px}
+.subtitle{text-align:center;color:#888;font-size:16px;margin-bottom:40px}
+.plans{display:flex;gap:25px;flex-wrap:wrap;justify-content:center}
+.plan{background:#fff;border-radius:20px;padding:35px;text-align:center;flex:1;min-width:280px;max-width:350px;box-shadow:0 15px 40px rgba(0,0,0,.1);position:relative;transition:transform .3s,box-shadow .3s}
+.plan:hover{transform:translateY(-10px);box-shadow:0 25px 60px rgba(0,0,0,.15)}
+.plan.featured{border:3px solid #d2691e;box-shadow:0 20px 50px rgba(210,105,30,.3)}
+.plan.featured:hover{box-shadow:0 30px 70px rgba(210,105,30,.4)}
+.popular-badge{position:absolute;top:-15px;left:50%;transform:translateX(-50%);background:#d2691e;color:#fff;padding:5px 18px;border-radius:20px;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase}
+.plan-icon{font-size:48px;margin-bottom:15px}
+.plan h2{color:#8b4513;font-size:22px;margin-bottom:10px}
+.plan .price{font-size:32px;font-weight:bold;color:#d2691e;margin-bottom:5px}
+.plan .period{color:#888;font-size:14px;margin-bottom:20px}
+.plan ul{list-style:none;margin:20px 0;text-align:left}
+.plan li{padding:10px 0;border-bottom:1px solid #f5e6d3;font-size:14px;color:#555}
+.plan li::before{content:'\2705';margin-right:8px}
+.plan li.disabled{opacity:0.4}
+.plan li.disabled::before{content:'\274C';margin-right:8px}
+.plan-btn{display:block;background:#d2691e;color:#fff;text-decoration:none;padding:14px 30px;border-radius:30px;font-weight:bold;font-size:15px;margin-top:20px;transition:background .3s}
+.plan-btn:hover{background:#8b4513}
+.plan-btn.outline{background:transparent;color:#d2691e;border:2px solid #d2691e}
+.plan-btn.outline:hover{background:#d2691e;color:#fff}
+.note{text-align:center;margin-top:20px;font-size:12px;color:#888}
+.faq{margin-top:50px;background:#fff;border-radius:20px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.faq h3{color:#8b4513;font-size:18px;margin-bottom:20px;text-align:center}
+.faq-item{border-bottom:1px solid #f0e0d0;padding:15px 0}
+.faq-item:last-child{border-bottom:none}
+.faq-q{font-weight:bold;color:#333;font-size:14px;margin-bottom:5px}
+.faq-a{color:#888;font-size:13px;line-height:1.6}
+.back-link{display:block;text-align:center;margin-top:30px;color:#d2691e;text-decoration:none;font-size:14px;font-weight:bold}
+.back-link:hover{text-decoration:underline}
+@media(max-width:768px){
+.plans{flex-direction:column;align-items:center}
+.plan{max-width:400px;width:100%}
+}
+</style>
+</head>
+<body>
+<div class="c">
+<h1>&#x1F981; Safari AI Pro Pricing</h1>
+<p class="subtitle">Choose the plan that fits your needs</p>
+
+<div class="plans">
+
+<div class="plan">
+<div class="plan-icon">&#x1F31F;</div>
+<h2>Free</h2>
+<div class="price">KES 0</div>
+<div class="period">forever</div>
+<ul>
+<li>10 queries per day</li>
+<li>Basic AI chat</li>
+<li>Document upload</li>
+<li>Web search</li>
+<li>Voice input</li>
+<li class="disabled">Priority access</li>
+<li class="disabled">API access</li>
+</ul>
+<a href="/login" class="plan-btn outline">Get Started</a>
+</div>
+
+<div class="plan featured">
+<div class="popular-badge">Most Popular</div>
+<div class="plan-icon">&#x1F680;</div>
+<h2>Pro</h2>
+<div class="price">KES 650</div>
+<div class="period">per month</div>
+<ul>
+<li>1,000 queries per day</li>
+<li>Advanced AI reasoning</li>
+<li>Document upload</li>
+<li>Web search</li>
+<li>Voice input</li>
+<li>Priority access</li>
+<li>API access</li>
+</ul>
+<a href="/login" class="plan-btn">Upgrade to Pro</a>
+</div>
+
+<div class="plan">
+<div class="plan-icon">&#x1F3E2;</div>
+<h2>Enterprise</h2>
+<div class="price">KES 6,500</div>
+<div class="period">per month</div>
+<ul>
+<li>10,000 queries per day</li>
+<li>Full AI capabilities</li>
+<li>Document upload</li>
+<li>Web search</li>
+<li>Voice input</li>
+<li>Priority access</li>
+<li>Full API access</li>
+<li>Custom solutions</li>
+</ul>
+<a href="/login" class="plan-btn">Contact Sales</a>
+</div>
+
+</div>
+
+<p class="note">Exchange rate: 1 USD = KES 130 (approximate). Prices may vary slightly.</p>
+
+<div class="faq">
+<h3>Frequently Asked Questions</h3>
+<div class="faq-item">
+<div class="faq-q">What happens when I reach my daily limit?</div>
+<div class="faq-a">Your queries will be blocked until the next day. You can upgrade your plan anytime for higher limits.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q">Can I cancel my subscription?</div>
+<div class="faq-a">Yes, you can cancel anytime. Your plan remains active until the end of the billing period.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q">Do you offer refunds?</div>
+<div class="faq-a">Payments are non-refundable as stated in our Terms of Service.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q">Is there a free trial for Pro?</div>
+<div class="faq-a">You can start with the Free plan and upgrade to Pro anytime to test the difference.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q">How do I pay?</div>
+<div class="faq-a">M-Pesa payment integration is coming soon. For now, contact safarisoftwares@gmail.com for payment arrangements.</div>
+</div>
+</div>
+
+<a href="/" class="back-link">Back to Safari AI Pro</a>
+</div>
+</body>
+</html>
