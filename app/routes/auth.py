@@ -2,6 +2,8 @@
 from sqlalchemy.orm import Session
 from datetime import datetime
 import secrets
+import os
+import json
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -13,15 +15,32 @@ from app.config import settings
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
-reset_tokens = {}
+RESET_TOKENS_FILE = "reset_tokens.json"
+
+def load_reset_tokens():
+    try:
+        if os.path.exists(RESET_TOKENS_FILE):
+            with open(RESET_TOKENS_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+def save_reset_tokens(tokens):
+    try:
+        with open(RESET_TOKENS_FILE, "w") as f:
+            json.dump(tokens, f, indent=2)
+    except Exception as e:
+        print(f"Save tokens error: {e}")
+
+reset_tokens = load_reset_tokens()
 
 def send_reset_email(email: str, reset_token: str):
     try:
-        sender_email = os.getenv("EMAIL_SENDER", "safarisoftwares@gmail.com")
+        sender_email = os.getenv("EMAIL_SENDER", "safari.ai.agent@gmail.com")
         sender_password = os.getenv("EMAIL_PASSWORD", "")
         
         if not sender_password:
-            print("WARNING: EMAIL_PASSWORD not set. Cannot send email.")
             return False
         
         msg = MIMEMultipart()
@@ -29,17 +48,20 @@ def send_reset_email(email: str, reset_token: str):
         msg["To"] = email
         msg["Subject"] = "Safari AI Pro - Password Reset"
         
+        reset_url = f"http://localhost:8000/reset-password?token={reset_token}"
+        
         body = f"""
 Hello,
 
 You requested a password reset for your Safari AI Pro account.
 
 Click the link below to reset your password:
-http://localhost:8000/reset-password?token={reset_token}
+{reset_url}
 
-Or use this token: {reset_token}
+Or go to http://localhost:8000/reset-password and enter this token:
+{reset_token}
 
-This link expires in 1 hour.
+This token expires in 1 hour.
 
 If you did not request this, please ignore this email.
 
@@ -98,31 +120,40 @@ async def forgot_password(email: str = Form(...), db: Session = Depends(get_db))
     
     reset_token = secrets.token_urlsafe(32)
     reset_tokens[reset_token] = {"email": email.lower(), "expires": datetime.utcnow().timestamp() + 3600}
+    save_reset_tokens(reset_tokens)
     
     email_sent = send_reset_email(email.lower(), reset_token)
     
     if email_sent:
         return {"status": "success", "message": "Password reset link sent to your email."}
     else:
-        return {"status": "error", "message": "Could not send email. Please contact support at safarisoftwares@gmail.com"}
+        return {"status": "error", "message": "Could not send email. Please try again later."}
 
 @router.post("/reset-password")
 async def reset_password(reset_token: str = Form(...), new_password: str = Form(...), db: Session = Depends(get_db)):
     if len(new_password) < 4:
         return {"status": "error", "message": "Password must be at least 4 characters."}
+    
     token_data = reset_tokens.get(reset_token)
     if not token_data:
         return {"status": "error", "message": "Invalid or expired reset token."}
+    
     if datetime.utcnow().timestamp() > token_data["expires"]:
         del reset_tokens[reset_token]
+        save_reset_tokens(reset_tokens)
         return {"status": "error", "message": "Reset token has expired."}
+    
     email = token_data["email"]
     user = db.query(User).filter(User.email == email).first()
     if not user:
         return {"status": "error", "message": "User not found."}
+    
     user.password_hash = AuthService.hash_password(new_password)
     db.commit()
+    
     del reset_tokens[reset_token]
+    save_reset_tokens(reset_tokens)
+    
     return {"status": "success", "message": "Password reset successfully."}
 
 @router.get("/me")

@@ -81,3 +81,22 @@ button#askBtn{background:#d2691e;color:#fff;border:0;padding:8px 16px;border-rad
 .export-btn{width:32px;height:30px}
 }
 .search-highlight{background:#ffeb3b;color:#333;font-weight:bold;padding:0 2px;border-radius:3px}
+
+.login-body{display:flex;justify-content:center;align-items:center;min-height:100vh}
+.login-container{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.2);padding:40px;width:100%;max-width:420px}
+.login-container h1{color:#8b4513;font-size:24px;text-align:center;margin-bottom:5px}
+.login-container p{color:#888;text-align:center;margin-bottom:25px;font-size:14px}
+.tab-row{display:flex;gap:10px;margin-bottom:20px}
+.tab-btn{flex:1;padding:12px;border:2px solid #d2691e;background:#fff;color:#d2691e;border-radius:10px;cursor:pointer;font-weight:bold;font-size:14px}
+.tab-btn.active{background:#d2691e;color:#fff}
+label{display:block;margin-bottom:8px;color:#555;font-weight:600;font-size:14px}
+input{padding:12px;margin-bottom:18px;width:100%;border:2px solid #e0c8a8;border-radius:10px;font-size:15px;outline:0}
+input:focus{border-color:#d2691e}
+button[type=submit]{background:#d2691e;color:#fff;border:0;padding:14px;border-radius:10px;cursor:pointer;font-weight:bold;width:100%;font-size:16px}
+button[type=submit]:hover{background:#8b4513}
+.msg{margin-top:15px;text-align:center;font-size:14px;display:none}
+.msg.error{color:#d32f2f;display:block}
+.msg.success{color:#2e7d32;display:block}
+.back{display:block;text-align:center;margin-top:15px;color:#d2691e;text-decoration:none;font-size:14px}
+.forgot-link{display:block;text-align:center;margin-top:10px;color:#d2691e;font-size:12px;text-decoration:none;cursor:pointer}
+.forgot-link:hover{text-decoration:underline}
