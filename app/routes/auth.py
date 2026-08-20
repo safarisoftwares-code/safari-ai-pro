@@ -2,14 +2,60 @@
 from sqlalchemy.orm import Session
 from datetime import datetime
 import secrets
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 from app.database import get_db
 from app.models import User, Chat
 from app.services.auth_service import AuthService
+from app.config import settings
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 reset_tokens = {}
+
+def send_reset_email(email: str, reset_token: str):
+    try:
+        sender_email = os.getenv("EMAIL_SENDER", "safarisoftwares@gmail.com")
+        sender_password = os.getenv("EMAIL_PASSWORD", "")
+        
+        if not sender_password:
+            print("WARNING: EMAIL_PASSWORD not set. Cannot send email.")
+            return False
+        
+        msg = MIMEMultipart()
+        msg["From"] = sender_email
+        msg["To"] = email
+        msg["Subject"] = "Safari AI Pro - Password Reset"
+        
+        body = f"""
+Hello,
+
+You requested a password reset for your Safari AI Pro account.
+
+Click the link below to reset your password:
+http://localhost:8000/reset-password?token={reset_token}
+
+Or use this token: {reset_token}
+
+This link expires in 1 hour.
+
+If you did not request this, please ignore this email.
+
+- Safari Softwares
+"""
+        msg.attach(MIMEText(body, "plain"))
+        
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, email, msg.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Email send error: {e}")
+        return False
 
 @router.post("/signup")
 async def signup(name: str = Form(...), email: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
@@ -46,11 +92,19 @@ async def logout():
 @router.post("/forgot-password")
 async def forgot_password(email: str = Form(...), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email.lower()).first()
+    
     if not user:
-        return {"status": "error", "message": "If this email exists, a reset link has been sent."}
+        return {"status": "success", "message": "If this email exists, a reset link has been sent."}
+    
     reset_token = secrets.token_urlsafe(32)
     reset_tokens[reset_token] = {"email": email.lower(), "expires": datetime.utcnow().timestamp() + 3600}
-    return {"status": "success", "message": "Password reset token generated.", "reset_token": reset_token}
+    
+    email_sent = send_reset_email(email.lower(), reset_token)
+    
+    if email_sent:
+        return {"status": "success", "message": "Password reset link sent to your email."}
+    else:
+        return {"status": "error", "message": "Could not send email. Please contact support at safarisoftwares@gmail.com"}
 
 @router.post("/reset-password")
 async def reset_password(reset_token: str = Form(...), new_password: str = Form(...), db: Session = Depends(get_db)):
@@ -94,7 +148,7 @@ async def update_profile(token: str = Form(...), name: str = Form(default=""), d
     if name and name.strip():
         user.name = name.strip()
         db.commit()
-    return {"status": "success", "message": "Profile updated.", "user": user.to_dict()}
+    return {"status": "success", "message": "Profile updated."}
 
 @router.post("/change-password")
 async def change_password(token: str = Form(...), current_password: str = Form(...), new_password: str = Form(...), db: Session = Depends(get_db)):

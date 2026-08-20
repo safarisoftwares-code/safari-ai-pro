@@ -20,15 +20,17 @@
 <button id="logoutBtn" onclick="logoutUser()" style="display:none;">Logout</button>
 </div>
 </div>
+
 <div class="search-bar" id="searchBar" style="display:none;">
-<input type="text" id="searchInput" placeholder="Search in chat history..." oninput="searchChats(this.value)">
-<button onclick="closeSearch()" style="background:none;border:none;cursor:pointer;font-size:18px;color:#888;">&times;</button>
+<input type="text" id="searchInput" placeholder="Type to search in all chats..." oninput="searchChats(this.value)" autocomplete="off">
+<button onclick="closeSearch()" class="search-close-btn">&times;</button>
 </div>
 <div class="search-results" id="searchResults" style="display:none;"></div>
+
 <div class="tabs-container">
 <div class="tabs" id="tabs"></div>
-<button class="search-btn" onclick="toggleSearch()" title="Search" style="cursor:pointer;">&#x1F50D;</button>
-<button class="export-btn" onclick="showExportMenu()" title="Export" style="cursor:pointer;">&#x1F4E5;</button>
+<button class="search-btn" onclick="toggleSearch()" title="Search chats">&#x1F50D;</button>
+<button class="export-btn" onclick="showExportMenu()" title="Export">&#x1F4E5;</button>
 </div>
 <div id="b"></div>
 <div class="typing-indicator" id="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
