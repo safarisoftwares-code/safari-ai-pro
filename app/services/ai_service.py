@@ -123,18 +123,20 @@ class AIService:
         error_str = str(error)
         error_type = type(error).__name__
         
-        if "rate_limit" in error_str.lower() or "429" in error_str:
-            return "Rate limit reached. Please wait 60 seconds and try again."
+        if "timeout" in error_str.lower() or "timed out" in error_str.lower():
+            return "🌐 Oops! My connection to the internet timed out. Please check your Wi-Fi or data connection, then try again."
+        elif "rate_limit" in error_str.lower() or "429" in error_str:
+            return "⏳ Whoa! You're fast! Give me a moment to catch my breath — try again in about a minute."
         elif "api_key" in error_str.lower() or "401" in error_str or "403" in error_str:
-            return "API key issue. Please check that GROQ_API_KEY is set correctly in .env file."
-        elif "connection" in error_str.lower() or "timeout" in error_str.lower() or "network" in error_str.lower():
-            return "Network connection issue. Please check your internet connection and try again."
+            return "🔧 I'm having a technical issue on my end. Please try again shortly, or contact safarisoftwares@gmail.com if it persists."
+        elif "connection" in error_str.lower() or "network" in error_str.lower():
+            return "📡 I can't reach my brain right now! Please check your internet connection and try again."
         elif "model" in error_str.lower() or "not found" in error_str.lower():
-            return "Model not available. The AI model may be temporarily down. Try again in a few minutes."
+            return "😴 I'm taking a quick nap! Try again in a few minutes."
         elif "quota" in error_str.lower() or "insufficient" in error_str.lower():
-            return "API quota exceeded. Please check your Groq account usage limits."
+            return "📊 I've hit my daily limit! Please try again later today."
         else:
-            return f"Error ({error_type}): {error_str[:200]}"
+            return "🤔 That's odd! Something unexpected happened. Please try again — if it keeps happening, let us know."
 
     def think(self, message: str, history: Optional[List[Dict]] = None, document: Optional[Dict] = None, user_id: str = "guest") -> str:
         try:
@@ -174,7 +176,8 @@ class AIService:
                 model=self.model,
                 messages=messages,
                 temperature=0.3,
-                max_tokens=4000
+                max_tokens=4000,
+                timeout=30
             )
 
             return response.choices[0].message.content
@@ -217,7 +220,8 @@ class AIService:
                 messages=messages,
                 temperature=0.3,
                 max_tokens=4000,
-                stream=True
+                stream=True,
+                timeout=30
             )
 
             for chunk in stream:
