@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 *.db
 safari_pro.db
+reset_tokens.json
