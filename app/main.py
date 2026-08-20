@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi import Form, Depends
 from sqlalchemy.orm import Session
-from datetime import datetime, date
+from datetime import datetime
 import hashlib
 import time
 import os
@@ -101,51 +101,6 @@ def render_admin_page(pw: str, db: Session) -> str:
     
     return html
 
-def render_analytics_page(pw: str, db: Session) -> str:
-    users = db.query(User).all()
-    chats = db.query(Chat).all()
-    
-    total_users = len(users)
-    total_queries = sum(u.total_queries for u in users)
-    today_queries = sum(u.queries_today for u in users)
-    active_chats = len(chats)
-    
-    free_count = sum(1 for u in users if u.plan == 'free')
-    pro_count = sum(1 for u in users if u.plan == 'pro')
-    enterprise_count = sum(1 for u in users if u.plan == 'enterprise')
-    
-    sorted_users = sorted(users, key=lambda u: u.total_queries, reverse=True)[:5]
-    top_users = ""
-    max_queries = max([u.total_queries for u in sorted_users], default=1)
-    for u in sorted_users:
-        pct = int((u.total_queries / max_queries) * 100) if max_queries > 0 else 0
-        top_users += f"""<div class="bar-chart">
-            <span class="bar-label">{u.name[:15]}</span>
-            <div class="bar-track"><div class="bar-fill" style="width:{pct}%"></div></div>
-            <span class="bar-value">{u.total_queries}</span>
-        </div>"""
-    
-    recent_users = ""
-    for u in sorted(users, key=lambda u: u.created_at, reverse=True)[:10]:
-        joined = u.created_at.strftime('%Y-%m-%d') if u.created_at else 'N/A'
-        recent_users += f"<tr><td>{u.name}</td><td>{u.email}</td><td>{u.plan.upper()}</td><td>{u.total_queries}</td><td>{joined}</td></tr>"
-    
-    with open("templates/analytics.html", "r", encoding="utf-8") as f:
-        html = f.read()
-    
-    html = html.replace("{{TOTAL_USERS}}", str(total_users))
-    html = html.replace("{{TOTAL_QUERIES}}", str(total_queries))
-    html = html.replace("{{TODAY_QUERIES}}", str(today_queries))
-    html = html.replace("{{ACTIVE_CHATS}}", str(active_chats))
-    html = html.replace("{{FREE_COUNT}}", str(free_count))
-    html = html.replace("{{PRO_COUNT}}", str(pro_count))
-    html = html.replace("{{ENTERPRISE_COUNT}}", str(enterprise_count))
-    html = html.replace("{{TOP_USERS}}", top_users)
-    html = html.replace("{{RECENT_USERS}}", recent_users)
-    html = html.replace("{{PW}}", pw)
-    
-    return html
-
 @app.get("/", response_class=HTMLResponse)
 async def home():
     return FileResponse("templates/index.html")
@@ -174,75 +129,47 @@ async def privacy_page():
 async def pricing_page():
     return FileResponse("templates/pricing.html")
 
-@app.get("/analytics", response_class=HTMLResponse)
-async def analytics_page(pw: str = "", db: Session = Depends(get_db)):
-    if pw != settings.ADMIN_PASSWORD:
-        return RedirectResponse("/admin")
-    return render_analytics_page(pw, db)
-
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_page(pw: str = "", db: Session = Depends(get_db)):
     if pw != settings.ADMIN_PASSWORD:
         return """<!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><title>Admin Login - Safari AI Pro</title>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Admin Login</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;background:#f5e6d3}
 form{background:#fff;padding:40px;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,.2);width:100%;max-width:400px}
-h2{color:#8b4513;margin-bottom:20px;text-align:center;font-size:24px}
-p{color:#888;text-align:center;margin-bottom:20px;font-size:13px}
-input{padding:12px;margin-bottom:20px;width:100%;border:2px solid #d2691e;border-radius:8px;font-size:16px;outline:0}
-button{background:#d2691e;color:#fff;border:0;padding:14px;border-radius:8px;cursor:pointer;font-weight:bold;width:100%;font-size:16px}
-button:hover{background:#8b4513}
+h2{color:#8b4513;margin-bottom:20px;text-align:center}
+.pw-wrapper{position:relative;margin-bottom:15px}
+.pw-wrapper input{padding:12px 45px 12px 12px;width:100%;border:2px solid #d2691e;border-radius:8px;font-size:16px;outline:0;box-sizing:border-box}
+.pw-wrapper input:focus{border-color:#8b4513}
+.toggle-pw{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;padding:5px;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+.toggle-pw:hover{background:#f0e0d0;border-radius:50%}
+button[type=submit]{background:#d2691e;color:#fff;border:0;padding:14px;border-radius:8px;cursor:pointer;font-weight:bold;width:100%;font-size:16px}
+button[type=submit]:hover{background:#8b4513}
 .back{display:block;text-align:center;margin-top:15px;color:#d2691e;text-decoration:none;font-size:13px}
 </style>
 </head>
 <body>
 <form method="get" action="/admin">
-<h2>&#x1F981; Safari AI Pro Admin</h2>
-<p>Enter admin password to continue</p>
-<input type="password" name="pw" placeholder="Admin password" required autofocus>
+<h2>&#x1F981; Admin Login</h2>
+<div class="pw-wrapper">
+<input type="password" id="pwInput" name="pw" placeholder="Enter admin password" required>
+<button type="button" class="toggle-pw" onclick="togglePw()">&#128065;</button>
+</div>
 <button type="submit">Login to Admin</button>
 <a href="/" class="back">Back to Chat</a>
 </form>
+<script>
+function togglePw(){var i=document.getElementById('pwInput');if(i.type==='password'){i.type='text';}else{i.type='password';}}
+</script>
 </body></html>"""
     
     return render_admin_page(pw, db)
 
-@app.post("/admin/generate")
-async def admin_generate(email: str = Form(...), plan: str = Form(default="free"), pw: str = Form(...), db: Session = Depends(get_db)):
-    if pw != settings.ADMIN_PASSWORD:
-        return RedirectResponse("/admin")
-    
-    api_key = hashlib.sha256(f"{email}{time.time()}".encode()).hexdigest()[:32]
-    limit_map = {"free": 10, "pro": 1000, "enterprise": 10000}
-    
-    user = db.query(User).filter(User.email == email).first()
-    
-    new_key = APIKey(
-        key=api_key,
-        user_id=user.id if user else None,
-        plan=plan,
-        daily_limit=limit_map.get(plan, 10),
-        is_active=True
-    )
-    db.add(new_key)
-    db.commit()
-    
-    return RedirectResponse(f"/admin?pw={pw}", status_code=303)
-
-@app.post("/admin/revoke-key")
-async def admin_revoke_key(key: str = Form(...), pw: str = Form(...), db: Session = Depends(get_db)):
-    if pw != settings.ADMIN_PASSWORD:
-        return RedirectResponse("/admin")
-    
-    api_key = db.query(APIKey).filter(APIKey.key == key).first()
-    if api_key:
-        db.delete(api_key)
-        db.commit()
-    
-    return RedirectResponse(f"/admin?pw={pw}", status_code=303)
+@app.post("/admin/logout")
+async def admin_logout():
+    return RedirectResponse("/admin", status_code=303)
 
 @app.get("/admin/ban")
 async def admin_ban(email: str = "", pw: str = "", db: Session = Depends(get_db)):
@@ -264,15 +191,6 @@ async def admin_unban(email: str = "", pw: str = "", db: Session = Depends(get_d
         db.commit()
     return RedirectResponse(f"/admin?pw={pw}")
 
-@app.post("/admin/logout")
-async def admin_logout():
-    return RedirectResponse("/admin", status_code=303)
-
 @app.get("/health")
 async def health():
-    return {
-        "status": "ok",
-        "service": settings.APP_NAME,
-        "version": settings.APP_VERSION,
-        "timestamp": datetime.now().isoformat()
-    }
+    return {"status":"ok","service":settings.APP_NAME,"version":settings.APP_VERSION,"timestamp":datetime.now().isoformat()}

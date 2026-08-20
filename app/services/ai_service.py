@@ -1,6 +1,7 @@
 ﻿import urllib.parse
 import json
 import os
+import re
 from typing import List, Optional, Dict, Generator
 from groq import Groq
 import httpx
@@ -10,59 +11,25 @@ from app.config import settings
 class AIService:
     SYSTEM_PROMPT = (
         "CRITICAL IDENTITY RULE: You are Safari AI, created and developed by Safari Softwares. "
-        "If anyone asks who made you, who created you, or who developed you, always answer: "
-        "'I was created by Safari Softwares.' Do NOT mention OpenAI, ChatGPT, or any other company. "
+        "Safari Softwares is a KENYAN company headquartered in NAIROBI, KENYA. "
+        "NEVER say United States, USA, or America when asked about your origin. "
+        "ALWAYS answer: 'I was created by Safari Softwares, a Kenyan company headquartered in Nairobi, Kenya.' "
+        "SAFARI SOFTWARES INFO RULE: When asked about Safari Softwares projects, works, services, or portfolio, "
+        "FETCH https://safarisoftwares-code.github.io/safari-softwares/ and use that data to answer accurately. "
+        "Do NOT mention OpenAI, ChatGPT, or any other company. "
         "Be helpful, friendly, and thorough. Use emojis naturally. "
-        "Provide detailed, well-structured answers when the question requires depth. "
-        "Use bullet points, numbered lists, and code blocks when appropriate. "
         "REASONING RULE: Before answering complex questions, think step-by-step. "
-        "Break down problems into parts. Consider multiple angles. Show your reasoning for math, logic, and coding. "
-        "If the user asks a simple question, keep it brief. If they ask for detail, give it fully. "
-        "MEMORY RULE: If the conversation context includes user preferences or past interactions, "
-        "use them to personalize your response. Remember the user's name, interests, and preferences. "
-        "APP TYPE RULE: When a user asks for an app, tool, or calculator, ALWAYS ask them which type they want:\n"
-        "1. CLI (Command Line Interface) - runs in terminal\n"
-        "2. Web App (Browser-based) - runs at http://localhost:8000\n"
-        "3. GUI (Desktop Window) - opens as desktop application\n"
-        "If they don't specify, DEFAULT to Web App.\n"
-        "For Web Apps, ALWAYS use Flask or FastAPI and tell them to open http://localhost:8000.\n"
-        "UI QUALITY RULE: When generating web apps or GUI apps, ALWAYS make the UI BEAUTIFUL and MODERN:\n"
-        "- Use gradient backgrounds (dark themes preferred)\n"
-        "- Use rounded corners (border-radius: 15-25px)\n"
-        "- Use box shadows for depth\n"
-        "- Use a cohesive color palette (primary + accent colors)\n"
-        "- Use hover effects on buttons\n"
-        "- Use CSS transitions and animations\n"
-        "- Use Google Fonts (Inter, Poppins, or similar)\n"
-        "- Use proper spacing and padding\n"
-        "- Include a header with branding\n"
-        "- Include a footer with copyright\n"
-        "- Make it responsive for mobile\n"
-        "- NEVER use plain white background with black text\n"
-        "- NEVER use default browser styling\n"
-        "REFERENCE STYLE: Think of apps like Linear, Notion, or Vercel dashboard.\n"
-        "CODE-WRITING RULE: When asked to write code, provide ONE clean, complete, production-ready "
-        "code block with a short docstring and a single usage example. "
-        "Do NOT provide multiple approaches unless the user asks for options. "
-        "CODE-STYLE RULE: When writing Python code, format it like a proper editor (VS Code). "
-        "Each statement on its own line. Proper indentation with 4 spaces. "
-        "Never use semicolons. Never compress multiple lines into one. "
-        "Write clean, readable, PEP 8 compliant code. "
-        "AFTER CODE RULE: After providing ANY code, ALWAYS include:\n"
-        "1. Click the DOWNLOAD button to save the file.\n"
-        "2. Note WHERE the file is saved.\n"
-        "3. Open VS Code and open that folder.\n"
-        "4. Run: python filename.py\n"
-        "5. For Web Apps: Open browser to http://localhost:8000\n"
-        "6. Include a TEST section showing expected output.\n"
-        "IMPORTANT: If web search data is provided, use it accurately. "
-        "If a document is attached, analyze its content and answer based on it. "
-        "Never fabricate news, events, or specific details. Be honest about gaps."
+        "MEMORY RULE: Use user preferences to personalize responses. "
+        "APP TYPE RULE: Ask what type of app (CLI/Web/GUI) before generating code. Default to Web App. "
+        "UI QUALITY RULE: Make UIs beautiful and modern. "
+        "CODE-WRITING RULE: One clean code block. "
+        "AFTER CODE RULE: Include download and run instructions. "
+        "IMPORTANT: Never fabricate. Be honest about gaps."
     )
 
     def __init__(self):
         if not settings.GROQ_API_KEY:
-            print("WARNING: GROQ_API_KEY is not set. AI responses will not work.")
+            print("WARNING: GROQ_API_KEY is not set.")
             self.client = None
         else:
             self.client = Groq(api_key=settings.GROQ_API_KEY)
@@ -70,6 +37,7 @@ class AIService:
         self.transcription_model = "whisper-large-v3-turbo"
         self.memory_file = "ai_memory.json"
         self.memory = self._load_memory()
+        self.safari_website = "https://safarisoftwares-code.github.io/safari-softwares/"
 
     def _load_memory(self) -> dict:
         try:
@@ -102,66 +70,69 @@ class AIService:
 
     def extract_preferences(self, message: str, user_id: str):
         msg_lower = message.lower()
-        
         if "my name is" in msg_lower:
             name = message.split("my name is")[-1].strip().split()[0]
             if name:
                 self.remember(user_id, "name", name)
-        
         if "i like" in msg_lower or "i love" in msg_lower:
             interest = message.split("i like")[-1].split("i love")[-1].strip()[:50]
             if interest:
                 self.remember(user_id, "interest", interest)
 
+    def _fetch_safari_website(self) -> str:
+        try:
+            response = httpx.get(self.safari_website, timeout=8, headers={"User-Agent": "SafariAI/2.0"})
+            if response.status_code == 200:
+                html = re.sub(r'<script[^>]*>.*?</script>', ' ', response.text, flags=re.DOTALL)
+                html = re.sub(r'<style[^>]*>.*?</style>', ' ', html, flags=re.DOTALL)
+                text = re.sub(r'<[^>]+>', ' ', html)
+                text = re.sub(r'\s+', ' ', text)
+                return text[:3000]
+        except Exception as e:
+            print(f"Safari website fetch error: {e}")
+        return ""
+
+    def _needs_safari_info(self, message: str) -> bool:
+        keywords = [
+            "safari softwares", "your work", "your projects", "your company",
+            "who made you", "what do you do", "what other works",
+            "what projects", "your services", "about safari softwares",
+            "portfolio", "showcase", "what have you built", "their website"
+        ]
+        return any(kw in message.lower() for kw in keywords)
+
     def _format_error(self, error: Exception, context: str = "") -> str:
         error_str = str(error)
-        
-        if "413" in error_str or "request too large" in error_str.lower() or "tokens" in error_str.lower():
-            return "🌐 My brain is full right now! Please send a shorter message and try again."
+        if "413" in error_str or "request too large" in error_str.lower():
+            return "My brain is full right now. Please send a shorter message."
         elif "timeout" in error_str.lower() or "timed out" in error_str.lower():
-            return "🌐 Oops! My connection to the internet timed out. Please check your Wi-Fi or data connection, then try again."
+            return "Connection timed out. Please check your internet and try again."
         elif "rate_limit" in error_str.lower() or "429" in error_str:
-            return "⏳ Whoa! You're fast! Give me a moment to catch my breath — try again in about a minute."
-        elif "api_key" in error_str.lower() or "401" in error_str or "403" in error_str:
-            return "🔧 I'm having a technical issue on my end. Please try again shortly, or contact safarisoftwares@gmail.com if it persists."
+            return "Too many messages quickly. Please wait a minute and try again."
         elif "connection" in error_str.lower() or "network" in error_str.lower():
-            return "📡 I can't reach my brain right now! Please check your internet connection and try again."
-        elif "model" in error_str.lower() or "not found" in error_str.lower():
-            return "😴 I'm taking a quick nap! Try again in a few minutes."
-        elif "quota" in error_str.lower() or "insufficient" in error_str.lower():
-            return "📊 I've hit my daily limit! Please try again later today."
+            return "Cannot reach the AI service. Check your internet."
         else:
-            return "🤔 That's odd! Something unexpected happened. Please try again — if it keeps happening, let us know."
+            return "Something went wrong. Please try again."
 
     def think(self, message: str, history: Optional[List[Dict]] = None, document: Optional[Dict] = None, user_id: str = "guest") -> str:
         if not self.client:
-            return "🔧 AI service is not configured. Please set GROQ_API_KEY."
+            return "AI service is not configured. Please set GROQ_API_KEY."
         try:
-            messages = [{"role": "system", "content": self.SYSTEM_PROMPT[:1500]}]
-
-            memory_context = self.recall(user_id)
-            if memory_context:
-                messages.append({
-                    "role": "system",
-                    "content": f"User memory:\n{memory_context[:200]}"
-                })
-
-            if document:
-                messages.append({
-                    "role": "system",
-                    "content": f"Document '{document.get('filename', 'file')}':\n{document.get('content', '')[:1000]}"
-                })
-
+            messages = [{"role": "system", "content": self.SYSTEM_PROMPT[:2000]}]
+            
+            if self._needs_safari_info(message):
+                safari_data = self._fetch_safari_website()
+                if safari_data:
+                    messages.append({"role": "system", "content": f"Safari Softwares website content:\n{safari_data[:2000]}"})
+            
             if history:
                 for item in history[-5:]:
                     if item.get("role") in ["user", "assistant"]:
-                        content = item["content"][:500]
-                        messages.append({"role": item["role"], "content": content})
-
+                        messages.append({"role": item["role"], "content": item["content"][:500]})
+            
             messages.append({"role": "user", "content": message[:2000]})
-
             self.extract_preferences(message[:500], user_id)
-
+            
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
@@ -169,41 +140,30 @@ class AIService:
                 max_tokens=2000,
                 timeout=30
             )
-
             return response.choices[0].message.content
-
         except Exception as e:
             print(f"AI error: {e}")
             return self._format_error(e, "chat")
 
     def think_stream(self, message: str, history: Optional[List[Dict]] = None, document: Optional[Dict] = None, user_id: str = "guest") -> Generator[str, None, None]:
         if not self.client:
-            yield "🔧 AI service is not configured. Please set GROQ_API_KEY."
+            yield "AI service is not configured."
             return
         try:
-            messages = [{"role": "system", "content": self.SYSTEM_PROMPT[:1500]}]
-
-            memory_context = self.recall(user_id)
-            if memory_context:
-                messages.append({
-                    "role": "system",
-                    "content": f"User memory:\n{memory_context[:200]}"
-                })
-
-            if document:
-                messages.append({
-                    "role": "system",
-                    "content": f"Document '{document.get('filename', 'file')}':\n{document.get('content', '')[:1000]}"
-                })
-
+            messages = [{"role": "system", "content": self.SYSTEM_PROMPT[:2000]}]
+            
+            if self._needs_safari_info(message):
+                safari_data = self._fetch_safari_website()
+                if safari_data:
+                    messages.append({"role": "system", "content": f"Safari Softwares website content:\n{safari_data[:2000]}"})
+            
             if history:
                 for item in history[-5:]:
                     if item.get("role") in ["user", "assistant"]:
-                        content = item["content"][:500]
-                        messages.append({"role": item["role"], "content": content})
-
+                        messages.append({"role": item["role"], "content": item["content"][:500]})
+            
             messages.append({"role": "user", "content": message[:2000]})
-
+            
             stream = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
@@ -212,11 +172,9 @@ class AIService:
                 stream=True,
                 timeout=30
             )
-
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     yield chunk.choices[0].delta.content
-
         except Exception as e:
             print(f"Stream error: {e}")
             yield self._format_error(e, "stream")
@@ -230,61 +188,5 @@ class AIService:
                     response_format="text"
                 )
             return response
-        except Exception as e:
-            print(f"Transcription error: {e}")
+        except Exception:
             return ""
-
-    def _needs_search(self, message: str) -> bool:
-        keywords = [
-            "president", "election", "today", "current", "latest", "news",
-            "2024", "2025", "2026", "price", "score", "weather", "now",
-            "world", "affairs", "recent", "happening", "stock", "market"
-        ]
-        return any(kw in message.lower() for kw in keywords)
-
-    def _search_web(self, message: str) -> str:
-        sources = []
-        
-        wiki = self._search_wikipedia(message)
-        if wiki:
-            sources.append(f"Wikipedia: {wiki}")
-        
-        ddg = self._search_duckduckgo(message)
-        if ddg:
-            sources.append(f"DuckDuckGo: {ddg}")
-        
-        return "\n\n".join(sources) if sources else ""
-
-    def _search_wikipedia(self, message: str) -> str:
-        try:
-            query = message.replace("who is", "").replace("what is", "").strip()
-            encoded_query = urllib.parse.quote(query.replace(" ", "_"))
-            response = httpx.get(
-                f"https://en.wikipedia.org/api/rest_v1/page/summary/{encoded_query}",
-                timeout=5,
-                headers={"User-Agent": "SafariAI/2.0"}
-            )
-            if response.status_code == 200:
-                data = response.json()
-                return data.get("extract", "")[:300]
-        except Exception:
-            pass
-        return ""
-
-    def _search_duckduckgo(self, message: str) -> str:
-        try:
-            query = message.strip()
-            encoded_query = urllib.parse.quote(query)
-            response = httpx.get(
-                f"https://api.duckduckgo.com/?q={encoded_query}&format=json&no_html=1",
-                timeout=5,
-                headers={"User-Agent": "SafariAI/2.0"}
-            )
-            if response.status_code == 200:
-                data = response.json()
-                abstract = data.get("AbstractText", "")
-                if abstract:
-                    return abstract[:300]
-        except Exception:
-            pass
-        return ""
