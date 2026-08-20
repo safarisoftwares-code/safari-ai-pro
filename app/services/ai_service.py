@@ -61,7 +61,11 @@ class AIService:
     )
 
     def __init__(self):
-        self.client = Groq(api_key=settings.GROQ_API_KEY)
+        if not settings.GROQ_API_KEY:
+            print("WARNING: GROQ_API_KEY is not set. AI responses will not work.")
+            self.client = None
+        else:
+            self.client = Groq(api_key=settings.GROQ_API_KEY)
         self.model = "openai/gpt-oss-120b"
         self.transcription_model = "whisper-large-v3-turbo"
         self.memory_file = "ai_memory.json"
@@ -93,7 +97,7 @@ class AIService:
         if user_id in self.memory["users"]:
             memories = self.memory["users"][user_id]
             if memories:
-                return "\n".join([f"- {k}: {v}" for k, v in memories.items()][-10:])
+                return "\n".join([f"- {k}: {v}" for k, v in memories.items()][-5:])
         return ""
 
     def extract_preferences(self, message: str, user_id: str):
@@ -108,22 +112,13 @@ class AIService:
             interest = message.split("i like")[-1].split("i love")[-1].strip()[:50]
             if interest:
                 self.remember(user_id, "interest", interest)
-        
-        if "i am a" in msg_lower or "i'm a" in msg_lower:
-            profession = message.split("i am a")[-1].split("i'm a")[-1].strip()[:50]
-            if profession:
-                self.remember(user_id, "profession", profession)
-        
-        if "my favorite" in msg_lower:
-            fav = message.split("my favorite")[-1].strip()[:50]
-            if fav:
-                self.remember(user_id, "favorite", fav)
 
     def _format_error(self, error: Exception, context: str = "") -> str:
         error_str = str(error)
-        error_type = type(error).__name__
         
-        if "timeout" in error_str.lower() or "timed out" in error_str.lower():
+        if "413" in error_str or "request too large" in error_str.lower() or "tokens" in error_str.lower():
+            return "🌐 My brain is full right now! Please send a shorter message and try again."
+        elif "timeout" in error_str.lower() or "timed out" in error_str.lower():
             return "🌐 Oops! My connection to the internet timed out. Please check your Wi-Fi or data connection, then try again."
         elif "rate_limit" in error_str.lower() or "429" in error_str:
             return "⏳ Whoa! You're fast! Give me a moment to catch my breath — try again in about a minute."
@@ -139,44 +134,39 @@ class AIService:
             return "🤔 That's odd! Something unexpected happened. Please try again — if it keeps happening, let us know."
 
     def think(self, message: str, history: Optional[List[Dict]] = None, document: Optional[Dict] = None, user_id: str = "guest") -> str:
+        if not self.client:
+            return "🔧 AI service is not configured. Please set GROQ_API_KEY."
         try:
-            messages = [{"role": "system", "content": self.SYSTEM_PROMPT}]
+            messages = [{"role": "system", "content": self.SYSTEM_PROMPT[:1500]}]
 
             memory_context = self.recall(user_id)
             if memory_context:
                 messages.append({
                     "role": "system",
-                    "content": f"User memory/context:\n{memory_context}"
+                    "content": f"User memory:\n{memory_context[:200]}"
                 })
 
             if document:
                 messages.append({
                     "role": "system",
-                    "content": (
-                        f"Attached document '{document.get('filename', 'file')}' content:\n"
-                        f"{document.get('content', '')[:3000]}"
-                    )
+                    "content": f"Document '{document.get('filename', 'file')}':\n{document.get('content', '')[:1000]}"
                 })
 
             if history:
-                for item in history[-10:]:
+                for item in history[-5:]:
                     if item.get("role") in ["user", "assistant"]:
-                        messages.append({"role": item["role"], "content": item["content"]})
+                        content = item["content"][:500]
+                        messages.append({"role": item["role"], "content": content})
 
-            messages.append({"role": "user", "content": message})
+            messages.append({"role": "user", "content": message[:2000]})
 
-            self.extract_preferences(message, user_id)
-
-            if self._needs_search(message):
-                search_data = self._search_web(message)
-                if search_data:
-                    messages.append({"role": "user", "content": f"Data: {search_data}\n\nAnswer: {message}"})
+            self.extract_preferences(message[:500], user_id)
 
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 temperature=0.3,
-                max_tokens=4000,
+                max_tokens=2000,
                 timeout=30
             )
 
@@ -187,39 +177,38 @@ class AIService:
             return self._format_error(e, "chat")
 
     def think_stream(self, message: str, history: Optional[List[Dict]] = None, document: Optional[Dict] = None, user_id: str = "guest") -> Generator[str, None, None]:
+        if not self.client:
+            yield "🔧 AI service is not configured. Please set GROQ_API_KEY."
+            return
         try:
-            messages = [{"role": "system", "content": self.SYSTEM_PROMPT}]
+            messages = [{"role": "system", "content": self.SYSTEM_PROMPT[:1500]}]
 
             memory_context = self.recall(user_id)
             if memory_context:
                 messages.append({
                     "role": "system",
-                    "content": f"User memory/context:\n{memory_context}"
+                    "content": f"User memory:\n{memory_context[:200]}"
                 })
 
             if document:
                 messages.append({
                     "role": "system",
-                    "content": (
-                        f"Attached document '{document.get('filename', 'file')}' content:\n"
-                        f"{document.get('content', '')[:3000]}"
-                    )
+                    "content": f"Document '{document.get('filename', 'file')}':\n{document.get('content', '')[:1000]}"
                 })
 
             if history:
-                for item in history[-10:]:
+                for item in history[-5:]:
                     if item.get("role") in ["user", "assistant"]:
-                        messages.append({"role": item["role"], "content": item["content"]})
+                        content = item["content"][:500]
+                        messages.append({"role": item["role"], "content": content})
 
-            messages.append({"role": "user", "content": message})
-
-            self.extract_preferences(message, user_id)
+            messages.append({"role": "user", "content": message[:2000]})
 
             stream = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 temperature=0.3,
-                max_tokens=4000,
+                max_tokens=2000,
                 stream=True,
                 timeout=30
             )
@@ -277,7 +266,7 @@ class AIService:
             )
             if response.status_code == 200:
                 data = response.json()
-                return data.get("extract", "")[:500]
+                return data.get("extract", "")[:300]
         except Exception:
             pass
         return ""
@@ -295,14 +284,7 @@ class AIService:
                 data = response.json()
                 abstract = data.get("AbstractText", "")
                 if abstract:
-                    return abstract[:500]
-                related = data.get("RelatedTopics", [])
-                if related:
-                    texts = []
-                    for topic in related[:3]:
-                        if isinstance(topic, dict) and topic.get("Text"):
-                            texts.append(topic["Text"][:200])
-                    return "\n".join(texts)
+                    return abstract[:300]
         except Exception:
             pass
         return ""
