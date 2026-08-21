@@ -62,7 +62,8 @@ async def pricing_page():
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_page(pw: str = "", db: Session = Depends(get_db)):
-    if pw != settings.ADMIN_PASSWORD:
+    # CRITICAL FIX: If admin password is empty or pw doesn't match, show login
+    if not settings.ADMIN_PASSWORD or pw != settings.ADMIN_PASSWORD:
         return """<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Admin Login</title>
@@ -189,29 +190,19 @@ code{{background:#f0e0d0;padding:3px 8px;border-radius:4px;font-size:12px}}
 
 @app.post("/admin/generate")
 async def admin_generate(email: str = Form(...), plan: str = Form(default="free"), pw: str = Form(...), db: Session = Depends(get_db)):
-    if pw != settings.ADMIN_PASSWORD:
+    if not settings.ADMIN_PASSWORD or pw != settings.ADMIN_PASSWORD:
         return RedirectResponse("/admin")
-    
     api_key = hashlib.sha256(f"{email}{time.time()}".encode()).hexdigest()[:32]
     limit_map = {"free": 10, "pro": 1000, "enterprise": 10000}
-    
     user = db.query(User).filter(User.email == email).first()
-    
-    new_key = APIKey(
-        key=api_key,
-        user_id=user.id if user else None,
-        plan=plan,
-        daily_limit=limit_map.get(plan, 10),
-        is_active=True
-    )
+    new_key = APIKey(key=api_key, user_id=user.id if user else None, plan=plan, daily_limit=limit_map.get(plan, 10), is_active=True)
     db.add(new_key)
     db.commit()
-    
     return RedirectResponse(f"/admin?pw={pw}", status_code=303)
 
 @app.post("/admin/revoke-key")
 async def admin_revoke_key(key: str = Form(...), pw: str = Form(...), db: Session = Depends(get_db)):
-    if pw != settings.ADMIN_PASSWORD:
+    if not settings.ADMIN_PASSWORD or pw != settings.ADMIN_PASSWORD:
         return RedirectResponse("/admin")
     api_key = db.query(APIKey).filter(APIKey.key == key).first()
     if api_key:
@@ -221,7 +212,7 @@ async def admin_revoke_key(key: str = Form(...), pw: str = Form(...), db: Sessio
 
 @app.get("/admin/ban")
 async def admin_ban(email: str = "", pw: str = "", db: Session = Depends(get_db)):
-    if pw != settings.ADMIN_PASSWORD:
+    if not settings.ADMIN_PASSWORD or pw != settings.ADMIN_PASSWORD:
         return RedirectResponse("/admin")
     user = db.query(User).filter(User.email == email).first()
     if user:
@@ -231,7 +222,7 @@ async def admin_ban(email: str = "", pw: str = "", db: Session = Depends(get_db)
 
 @app.get("/admin/unban")
 async def admin_unban(email: str = "", pw: str = "", db: Session = Depends(get_db)):
-    if pw != settings.ADMIN_PASSWORD:
+    if not settings.ADMIN_PASSWORD or pw != settings.ADMIN_PASSWORD:
         return RedirectResponse("/admin")
     user = db.query(User).filter(User.email == email).first()
     if user:
