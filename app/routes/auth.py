@@ -5,6 +5,7 @@ import secrets
 import os
 import json
 import smtplib
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -13,6 +14,7 @@ from app.models import User, Chat
 from app.services.auth_service import AuthService
 from app.config import settings
 
+logger = logging.getLogger("safari_pro")
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 RESET_TOKENS_FILE = "reset_tokens.json"
@@ -31,7 +33,7 @@ def save_reset_tokens(tokens):
         with open(RESET_TOKENS_FILE, "w") as f:
             json.dump(tokens, f, indent=2)
     except Exception as e:
-        print(f"Save tokens error: {e}")
+        logger.error(f"Save tokens error: {e}")
 
 reset_tokens = load_reset_tokens()
 
@@ -40,8 +42,11 @@ def send_reset_email(email: str, reset_token: str):
         sender_email = os.getenv("EMAIL_SENDER", "safari.ai.agent@gmail.com")
         sender_password = os.getenv("EMAIL_PASSWORD", "")
         
+        logger.info(f"Attempting to send email to {email} from {sender_email}")
+        logger.info(f"Password set: {bool(sender_password)}")
+        
         if not sender_password:
-            print("ERROR: EMAIL_PASSWORD not set")
+            logger.error("EMAIL_PASSWORD is NOT set")
             return False
         
         reset_url = f"https://safari-ai-pro.onrender.com/reset-password?token={reset_token}"
@@ -69,15 +74,16 @@ If you did not request this, please ignore this email.
 """
         msg.attach(MIMEText(body, "plain"))
         
+        logger.info("Connecting to SMTP server...")
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, email, msg.as_string())
         server.quit()
-        print(f"Email sent successfully to {email}")
+        logger.info(f"Email sent successfully to {email}")
         return True
     except Exception as e:
-        print(f"Email send error: {e}")
+        logger.error(f"Email send error: {e}")
         return False
 
 @router.post("/signup")
@@ -114,9 +120,11 @@ async def logout():
 
 @router.post("/forgot-password")
 async def forgot_password(email: str = Form(...), db: Session = Depends(get_db)):
+    logger.info(f"Forgot password requested for: {email}")
     user = db.query(User).filter(User.email == email.lower()).first()
     
     if not user:
+        logger.info(f"Email not found: {email}")
         return {"status": "success", "message": "If this email exists, a reset link has been sent. Check your inbox AND spam folder."}
     
     reset_token = secrets.token_urlsafe(32)
