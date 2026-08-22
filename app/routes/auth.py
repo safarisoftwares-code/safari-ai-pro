@@ -41,14 +41,15 @@ def send_reset_email(email: str, reset_token: str):
         sender_password = os.getenv("EMAIL_PASSWORD", "")
         
         if not sender_password:
+            print("ERROR: EMAIL_PASSWORD not set")
             return False
+        
+        reset_url = f"https://safari-ai-pro.onrender.com/reset-password?token={reset_token}"
         
         msg = MIMEMultipart()
         msg["From"] = sender_email
         msg["To"] = email
         msg["Subject"] = "Safari AI Pro - Password Reset"
-        
-        reset_url = f"http://localhost:8000/reset-password?token={reset_token}"
         
         body = f"""
 Hello,
@@ -58,14 +59,13 @@ You requested a password reset for your Safari AI Pro account.
 Click the link below to reset your password:
 {reset_url}
 
-Or go to http://localhost:8000/reset-password and enter this token:
-{reset_token}
+Or use this token: {reset_token}
 
 This token expires in 1 hour.
 
 If you did not request this, please ignore this email.
 
-- Safari Softwares
+- Safari Softwares, Nairobi, Kenya
 """
         msg.attach(MIMEText(body, "plain"))
         
@@ -74,6 +74,7 @@ If you did not request this, please ignore this email.
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, email, msg.as_string())
         server.quit()
+        print(f"Email sent successfully to {email}")
         return True
     except Exception as e:
         print(f"Email send error: {e}")
@@ -116,7 +117,7 @@ async def forgot_password(email: str = Form(...), db: Session = Depends(get_db))
     user = db.query(User).filter(User.email == email.lower()).first()
     
     if not user:
-        return {"status": "success", "message": "If this email exists, a reset link has been sent."}
+        return {"status": "success", "message": "If this email exists, a reset link has been sent. Check your inbox AND spam folder."}
     
     reset_token = secrets.token_urlsafe(32)
     reset_tokens[reset_token] = {"email": email.lower(), "expires": datetime.utcnow().timestamp() + 3600}
@@ -125,7 +126,7 @@ async def forgot_password(email: str = Form(...), db: Session = Depends(get_db))
     email_sent = send_reset_email(email.lower(), reset_token)
     
     if email_sent:
-        return {"status": "success", "message": "Password reset link sent to your email."}
+        return {"status": "success", "message": "Reset link sent! Check your inbox AND spam folder."}
     else:
         return {"status": "error", "message": "Could not send email. Please try again later."}
 
@@ -133,27 +134,21 @@ async def forgot_password(email: str = Form(...), db: Session = Depends(get_db))
 async def reset_password(reset_token: str = Form(...), new_password: str = Form(...), db: Session = Depends(get_db)):
     if len(new_password) < 4:
         return {"status": "error", "message": "Password must be at least 4 characters."}
-    
     token_data = reset_tokens.get(reset_token)
     if not token_data:
         return {"status": "error", "message": "Invalid or expired reset token."}
-    
     if datetime.utcnow().timestamp() > token_data["expires"]:
         del reset_tokens[reset_token]
         save_reset_tokens(reset_tokens)
         return {"status": "error", "message": "Reset token has expired."}
-    
     email = token_data["email"]
     user = db.query(User).filter(User.email == email).first()
     if not user:
         return {"status": "error", "message": "User not found."}
-    
     user.password_hash = AuthService.hash_password(new_password)
     db.commit()
-    
     del reset_tokens[reset_token]
     save_reset_tokens(reset_tokens)
-    
     return {"status": "success", "message": "Password reset successfully."}
 
 @router.get("/me")
