@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import secrets
 import os
-import json
 import httpx
 
 from app.database import get_db
@@ -13,25 +12,8 @@ from app.config import settings
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
-RESET_TOKENS_FILE = "reset_tokens.json"
-
-def load_reset_tokens():
-    try:
-        if os.path.exists(RESET_TOKENS_FILE):
-            with open(RESET_TOKENS_FILE, "r") as f:
-                return json.load(f)
-    except Exception:
-        pass
-    return {}
-
-def save_reset_tokens(tokens):
-    try:
-        with open(RESET_TOKENS_FILE, "w") as f:
-            json.dump(tokens, f, indent=2)
-    except Exception as e:
-        print(f"Save tokens error: {e}", flush=True)
-
-reset_tokens = load_reset_tokens()
+# Store reset tokens in memory (persists during server lifetime)
+reset_tokens = {}
 
 def send_reset_email(email: str, reset_token: str):
     try:
@@ -116,16 +98,13 @@ async def logout():
 
 @router.post("/forgot-password")
 async def forgot_password(email: str = Form(...), db: Session = Depends(get_db)):
-    print(f"DEBUG: Forgot password for: {email}", flush=True)
     user = db.query(User).filter(User.email == email.lower()).first()
     
     if not user:
-        print(f"DEBUG: Email not found: {email}", flush=True)
         return {"status": "success", "message": "If this email exists, a reset link has been sent. Check your inbox AND spam folder."}
     
     reset_token = secrets.token_urlsafe(32)
     reset_tokens[reset_token] = {"email": email.lower(), "expires": datetime.utcnow().timestamp() + 3600}
-    save_reset_tokens(reset_tokens)
     
     email_sent = send_reset_email(email.lower(), reset_token)
     
@@ -143,7 +122,6 @@ async def reset_password(reset_token: str = Form(...), new_password: str = Form(
         return {"status": "error", "message": "Invalid or expired reset token."}
     if datetime.utcnow().timestamp() > token_data["expires"]:
         del reset_tokens[reset_token]
-        save_reset_tokens(reset_tokens)
         return {"status": "error", "message": "Reset token has expired."}
     email = token_data["email"]
     user = db.query(User).filter(User.email == email).first()
@@ -152,7 +130,6 @@ async def reset_password(reset_token: str = Form(...), new_password: str = Form(
     user.password_hash = AuthService.hash_password(new_password)
     db.commit()
     del reset_tokens[reset_token]
-    save_reset_tokens(reset_tokens)
     return {"status": "success", "message": "Password reset successfully."}
 
 @router.get("/me")
