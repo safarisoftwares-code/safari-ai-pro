@@ -12,7 +12,6 @@ from app.config import settings
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
-# Store reset tokens in memory (persists during server lifetime)
 reset_tokens = {}
 
 def send_reset_email(email: str, reset_token: str):
@@ -32,7 +31,7 @@ def send_reset_email(email: str, reset_token: str):
                 "Content-Type": "application/json"
             },
             json={
-                "from": "Safari AI Pro <no-reply@safarisoftwares.co.ke>",
+                "from": "Safari AI Pro <no-reply@safari-ai-pro.co.ke>",
                 "to": [email],
                 "subject": "Safari AI Pro - Password Reset",
                 "html": f"""
