@@ -4,10 +4,7 @@ from datetime import datetime
 import secrets
 import os
 import json
-import smtplib
-import sys
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import httpx
 
 from app.database import get_db
 from app.models import User, Chat
@@ -38,49 +35,49 @@ reset_tokens = load_reset_tokens()
 
 def send_reset_email(email: str, reset_token: str):
     try:
-        sender_email = os.getenv("EMAIL_SENDER", "safari.ai.agent@gmail.com")
-        sender_password = os.getenv("EMAIL_PASSWORD", "")
+        resend_api_key = os.getenv("RESEND_API_KEY", "")
         
-        print(f"DEBUG: Attempting email to {email} from {sender_email}", flush=True)
-        print(f"DEBUG: Password set: {bool(sender_password)}", flush=True)
-        
-        if not sender_password:
-            print("DEBUG: EMAIL_PASSWORD is NOT set", flush=True)
+        if not resend_api_key:
+            print("DEBUG: RESEND_API_KEY not set", flush=True)
             return False
         
         reset_url = f"https://safari-ai-pro.onrender.com/reset-password?token={reset_token}"
         
-        msg = MIMEMultipart()
-        msg["From"] = sender_email
-        msg["To"] = email
-        msg["Subject"] = "Safari AI Pro - Password Reset"
+        response = httpx.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {resend_api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "from": "Safari AI Pro <no-reply@safarisoftwares.co.ke>",
+                "to": [email],
+                "subject": "Safari AI Pro - Password Reset",
+                "html": f"""
+                <div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:20px">
+                    <h2 style="color:#8b4513">Safari AI Pro - Password Reset</h2>
+                    <p>Hello,</p>
+                    <p>You requested a password reset. Click the button below:</p>
+                    <p style="text-align:center;margin:25px 0">
+                        <a href="{reset_url}" style="background:#d2691e;color:#fff;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold">Reset Password</a>
+                    </p>
+                    <p>Or use this token: <strong>{reset_token}</strong></p>
+                    <p style="color:#888;font-size:12px">This token expires in 1 hour.</p>
+                    <p style="color:#888;font-size:12px">If you did not request this, please ignore this email.</p>
+                    <hr>
+                    <p style="color:#8b4513;font-size:12px">- Safari Softwares, Nairobi, Kenya</p>
+                </div>
+                """
+            },
+            timeout=15
+        )
         
-        body = f"""
-Hello,
-
-You requested a password reset for your Safari AI Pro account.
-
-Click the link below to reset your password:
-{reset_url}
-
-Or use this token: {reset_token}
-
-This token expires in 1 hour.
-
-If you did not request this, please ignore this email.
-
-- Safari Softwares, Nairobi, Kenya
-"""
-        msg.attach(MIMEText(body, "plain"))
-        
-        print("DEBUG: Connecting to SMTP...", flush=True)
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, email, msg.as_string())
-        server.quit()
-        print(f"DEBUG: Email sent successfully to {email}", flush=True)
-        return True
+        if response.status_code == 200:
+            print(f"DEBUG: Email sent via Resend to {email}", flush=True)
+            return True
+        else:
+            print(f"DEBUG: Resend error: {response.status_code} - {response.text}", flush=True)
+            return False
     except Exception as e:
         print(f"DEBUG: Email send error: {e}", flush=True)
         return False
