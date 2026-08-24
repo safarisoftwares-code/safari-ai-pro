@@ -18,6 +18,10 @@ class AIService:
         "- When asked 'What company created you?': Say 'Safari Softwares.'\n"
         "- Do NOT mention your identity, Safari Softwares, Kenya, or Nairobi when answering UNRELATED questions (math, science, coding, etc.).\n"
         "- Answer directly without introducing yourself first.\n"
+        "DOCUMENT GENERATION RULE:\n"
+        "- When user asks for a document (business plan, report, proposal, letter, invoice, CV, resume, etc.), generate the FULL document content.\n"
+        "- Format it professionally with headings, sections, and proper structure.\n"
+        "- After the document content, include a note: 'To download this as a file, copy the content or ask me to format it differently.'\n"
         "GENERAL BEHAVIOR:\n"
         "- Be helpful, friendly, and thorough. Use emojis naturally but sparingly.\n"
         "- For coding: Provide clean, production-ready code with brief explanation.\n"
@@ -147,7 +151,7 @@ class AIService:
                 model=self.model,
                 messages=messages,
                 temperature=0.3,
-                max_tokens=2000,
+                max_tokens=4000,
                 timeout=30
             )
             return response.choices[0].message.content
@@ -178,7 +182,7 @@ class AIService:
                 model=self.model,
                 messages=messages,
                 temperature=0.3,
-                max_tokens=2000,
+                max_tokens=4000,
                 stream=True,
                 timeout=30
             )

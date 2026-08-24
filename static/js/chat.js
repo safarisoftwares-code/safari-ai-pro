@@ -15,134 +15,9 @@ function renderMarkdown(text){
     return text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function escapeRegex(str){
-    var specials=['.','*','+','?','^','$','(',')','{','}','[',']','|','\\','/'];
-    var result='';
-    for(var i=0;i<str.length;i++){
-        var char=str.charAt(i);
-        if(specials.indexOf(char)!==-1){
-            result+='\\'+char;
-        }else{
-            result+=char;
-        }
-    }
-    return result;
-}
-
-function toggleSearch(){
-    var bar=document.getElementById('searchBar');
-    var results=document.getElementById('searchResults');
-    if(!bar)return;
-    if(bar.style.display==='none'||bar.style.display===''){
-        bar.style.display='flex';
-        setTimeout(function(){
-            var input=document.getElementById('searchInput');
-            if(input)input.focus();
-        },100);
-    }else{
-        bar.style.display='none';
-        if(results)results.style.display='none';
-        var input=document.getElementById('searchInput');
-        if(input)input.value='';
-    }
-}
-
-function closeSearch(){
-    var bar=document.getElementById('searchBar');
-    var results=document.getElementById('searchResults');
-    if(bar)bar.style.display='none';
-    if(results)results.style.display='none';
-    var input=document.getElementById('searchInput');
-    if(input)input.value='';
-}
-
-function searchChats(query){
-    var results=document.getElementById('searchResults');
-    if(!results)return;
-    if(!query||query.trim().length<2){
-        results.style.display='none';
-        results.innerHTML='';
-        return;
-    }
-    var allResults=[];
-    var q=query.toLowerCase();
-    Object.keys(chats).forEach(function(chatId){
-        var chat=chats[chatId];
-        var msgs=chat.messages||[];
-        var times=chat.timestamps||[];
-        msgs.forEach(function(m,i){
-            var content=m.substring(2);
-            if(content.toLowerCase().indexOf(q)!==-1){
-                allResults.push({chatId:chatId,chatName:chat.name||'Chat',content:content,time:times[i]||null,messageIndex:i,role:m.startsWith('U:')?'user':'assistant'});
-            }
-        });
-    });
-    if(allResults.length===0){
-        results.innerHTML='<p style="text-align:center;color:#999;font-size:13px;padding:15px">No results found</p>';
-        results.style.display='block';
-        return;
-    }
-    results.innerHTML='';
-    allResults.slice(0,20).forEach(function(r){
-        var div=document.createElement('div');
-        div.className='search-result';
-        var preview=r.content;
-        if(preview.length>80)preview=preview.substring(0,80)+'...';
-        var idx=preview.toLowerCase().indexOf(q);
-        var highlighted=preview;
-        if(idx!==-1){
-            highlighted=preview.substring(0,idx)+'<mark class="search-highlight">'+preview.substring(idx,idx+q.length)+'</mark>'+preview.substring(idx+q.length);
-        }
-        var timeStr=r.time?new Date(r.time).toLocaleString():'';
-        var roleLabel=r.role==='user'?'You':'Safari AI';
-        div.innerHTML=highlighted+'<span class="src">'+roleLabel+' | '+r.chatName+' | '+timeStr+'</span>';
-        div.onclick=function(){
-            closeSearch();
-            activeChat=r.chatId;
-            renderTabs();
-            renderMessages();
-            setTimeout(function(){
-                jumpToMessage(r.messageIndex, q);
-            },300);
-        };
-        results.appendChild(div);
-    });
-    results.style.display='block';
-}
-
-function jumpToMessage(messageIndex, query){
-    var box=document.getElementById('b');
-    if(!box)return;
-    var wrappers=box.querySelectorAll('.m-wrapper');
-    if(wrappers[messageIndex]){
-        wrappers[messageIndex].scrollIntoView({behavior:'smooth',block:'center'});
-        wrappers[messageIndex].style.outline='3px solid #d2691e';
-        wrappers[messageIndex].style.outlineOffset='3px';
-        wrappers[messageIndex].style.borderRadius='16px';
-        
-        var msgDiv=wrappers[messageIndex].querySelector('.m');
-        if(msgDiv&&query){
-            var textContent=msgDiv.textContent;
-            var escapedQuery=escapeRegex(query);
-            var regex=new RegExp(escapedQuery,'gi');
-            
-            if(regex.test(textContent)){
-                var newHTML=textContent.replace(regex,function(match){
-                    return '<mark class="search-highlight">'+match+'</mark>';
-                });
-                msgDiv.innerHTML=newHTML;
-            }
-        }
-        
-        setTimeout(function(){
-            wrappers[messageIndex].style.outline='none';
-        },3000);
-    }
-}
-
 function addCodeButtons(container){
     var codeBlocks=container.querySelectorAll('pre code');
-    codeBlocks.forEach(function(codeBlock){
+    codeBlocks.forEach(function(codeBlock,i){
         var pre=codeBlock.parentElement;
         if(pre.querySelector('.code-btn-group'))return;
         var btnGroup=document.createElement('div');
@@ -163,6 +38,41 @@ function addCodeButtons(container){
     });
 }
 
+function addDocumentButtons(container){
+    var docMessages=container.querySelectorAll('.doc-download-ready');
+    docMessages.forEach(function(msgDiv){
+        if(msgDiv.querySelector('.doc-btn-group'))return;
+        var text=msgDiv.innerText || msgDiv.textContent;
+        if(text.length < 100) return;
+        
+        var btnGroup=document.createElement('div');
+        btnGroup.className='doc-btn-group';
+        btnGroup.style.cssText='display:flex;gap:6px;margin-top:10px;flex-wrap:wrap';
+        
+        var docName=text.substring(0,50).replace(/[^a-zA-Z0-9]/g,'_').toLowerCase()+'_document';
+        
+        var txtBtn=document.createElement('button');
+        txtBtn.textContent='Download .txt';
+        txtBtn.style.cssText='background:#d2691e;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:bold';
+        txtBtn.onclick=function(){downloadFile(text,docName+'.txt','text/plain');showToast('Downloaded as TXT!');};
+        
+        var htmlBtn=document.createElement('button');
+        htmlBtn.textContent='Download .html';
+        htmlBtn.style.cssText='background:#2e7d32;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:bold';
+        htmlBtn.onclick=function(){var htmlContent='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+docName+'</title><style>body{font-family:Segoe UI,sans-serif;padding:40px;max-width:800px;margin:auto;line-height:1.7}h1{color:#8b4513}h2{color:#d2691e;margin-top:20px}</style></head><body>'+msgDiv.innerHTML+'</body></html>';downloadFile(htmlContent,docName+'.html','text/html');showToast('Downloaded as HTML!');};
+        
+        var docBtn=document.createElement('button');
+        docBtn.textContent='Download .doc';
+        docBtn.style.cssText='background:#1565c0;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:bold';
+        docBtn.onclick=function(){var docContent='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="UTF-8"><title>'+docName+'</title></head><body>'+msgDiv.innerHTML+'</body></html>';downloadFile(docContent,docName+'.doc','application/msword');showToast('Downloaded as Word!');};
+        
+        btnGroup.appendChild(txtBtn);
+        btnGroup.appendChild(htmlBtn);
+        btnGroup.appendChild(docBtn);
+        msgDiv.appendChild(btnGroup);
+    });
+}
+
 function downloadFile(content,filename,mimeType){
     var blob=new Blob([content],{type:mimeType});
     var url=URL.createObjectURL(blob);
@@ -173,6 +83,63 @@ function downloadFile(content,filename,mimeType){
     URL.revokeObjectURL(url);
 }
 
+function toggleSearch(){
+    var bar=document.getElementById('searchBar');
+    var results=document.getElementById('searchResults');
+    if(!bar)return;
+    if(bar.style.display==='none'||bar.style.display===''){
+        bar.style.display='flex';
+        setTimeout(function(){var input=document.getElementById('searchInput');if(input)input.focus();},100);
+    }else{
+        bar.style.display='none';
+        if(results)results.style.display='none';
+        var input=document.getElementById('searchInput');
+        if(input)input.value='';
+    }
+}
+
+function closeSearch(){
+    var bar=document.getElementById('searchBar');
+    var results=document.getElementById('searchResults');
+    if(bar)bar.style.display='none';
+    if(results)results.style.display='none';
+    var input=document.getElementById('searchInput');
+    if(input)input.value='';
+}
+
+function searchChats(query){
+    var results=document.getElementById('searchResults');
+    if(!results)return;
+    if(!query||query.trim().length<2){results.style.display='none';results.innerHTML='';return;}
+    var allResults=[];
+    var q=query.toLowerCase();
+    Object.keys(chats).forEach(function(chatId){
+        var chat=chats[chatId];
+        var msgs=chat.messages||[];
+        var times=chat.timestamps||[];
+        msgs.forEach(function(m,i){
+            var content=m.substring(2);
+            if(content.toLowerCase().indexOf(q)!==-1){allResults.push({chatId:chatId,chatName:chat.name||'Chat',content:content,time:times[i]||null,index:i});}
+        });
+    });
+    if(allResults.length===0){results.innerHTML='<p style="text-align:center;color:#999;font-size:12px;padding:10px">No results found</p>';results.style.display='block';return;}
+    results.innerHTML='';
+    allResults.slice(0,20).forEach(function(r){
+        var div=document.createElement('div');
+        div.className='search-result';
+        var preview=r.content;
+        if(preview.length>100)preview=preview.substring(0,100)+'...';
+        var idx=preview.toLowerCase().indexOf(q);
+        var highlighted=preview;
+        if(idx!==-1){highlighted=preview.substring(0,idx)+'<span class="highlight">'+preview.substring(idx,idx+q.length)+'</span>'+preview.substring(idx+q.length);}
+        var timeStr=r.time?new Date(r.time).toLocaleString():'';
+        div.innerHTML=highlighted+'<span class="src">'+r.chatName+' | '+timeStr+'</span>';
+        div.onclick=function(){activeChat=r.chatId;renderTabs();renderMessages();closeSearch();showToast('Jumped to chat');};
+        results.appendChild(div);
+    });
+    results.style.display='block';
+}
+
 function showExportMenu(){
     var overlay=document.createElement('div');
     overlay.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:999;display:flex;justify-content:center;align-items:center';
@@ -181,8 +148,18 @@ function showExportMenu(){
     menu.style.cssText='background:#fff;border-radius:15px;padding:25px;width:90%;max-width:350px;text-align:center';
     menu.innerHTML='<h3 style="color:#8b4513;margin-bottom:15px">Export Chat As</h3>';
     var formats=[{name:'Text File (.txt)',action:function(){exportChatTXT();}},{name:'JSON File (.json)',action:function(){exportChatJSON();}},{name:'PDF Document (.pdf)',action:function(){exportChatPDF();}}];
-    formats.forEach(function(f){var btn=document.createElement('button');btn.textContent=f.name;btn.style.cssText='display:block;width:100%;padding:12px;margin:8px 0;border:2px solid #d2691e;border-radius:10px;background:#fff;color:#d2691e;cursor:pointer;font-weight:bold;font-size:14px';btn.onclick=function(){overlay.remove();f.action();};menu.appendChild(btn);});
-    var cancelBtn=document.createElement('button');cancelBtn.textContent='Cancel';cancelBtn.style.cssText='display:block;width:100%;padding:10px;margin-top:10px;border:none;border-radius:10px;background:#f0e0d0;color:#8b4513;cursor:pointer;font-weight:bold';cancelBtn.onclick=function(){overlay.remove();};menu.appendChild(cancelBtn);
+    formats.forEach(function(f){
+        var btn=document.createElement('button');
+        btn.textContent=f.name;
+        btn.style.cssText='display:block;width:100%;padding:12px;margin:8px 0;border:2px solid #d2691e;border-radius:10px;background:#fff;color:#d2691e;cursor:pointer;font-weight:bold;font-size:14px';
+        btn.onclick=function(){overlay.remove();f.action();};
+        menu.appendChild(btn);
+    });
+    var cancelBtn=document.createElement('button');
+    cancelBtn.textContent='Cancel';
+    cancelBtn.style.cssText='display:block;width:100%;padding:10px;margin-top:10px;border:none;border-radius:10px;background:#f0e0d0;color:#8b4513;cursor:pointer;font-weight:bold';
+    cancelBtn.onclick=function(){overlay.remove();};
+    menu.appendChild(cancelBtn);
     overlay.appendChild(menu);
     document.body.appendChild(overlay);
 }
@@ -197,119 +174,21 @@ function getChatData(){
     return data;
 }
 
-function exportChatTXT(){
-    var data=getChatData();
-    if(!data)return;
-    var text='Safari AI Pro Chat Export\nDate: '+new Date().toLocaleString()+'\nChat: '+data.title+'\n'+'='.repeat(50)+'\n\n';
-    data.messages.forEach(function(m){var role=m.role==='user'?'You':'Safari AI';text+=role+' ('+m.time+'): '+m.content+'\n\n';});
-    downloadFile(text,'chat.txt','text/plain');
-    showToast('Exported as TXT!');
-}
+function exportChatTXT(){var data=getChatData();if(!data)return;var text='Safari AI Pro Chat Export\nDate: '+new Date().toLocaleString()+'\nChat: '+data.title+'\n'+'='.repeat(50)+'\n\n';data.messages.forEach(function(m){var role=m.role==='user'?'You':'Safari AI';text+=role+' ('+m.time+'): '+m.content+'\n\n';});downloadFile(text,'chat.txt','text/plain');showToast('Exported as TXT!');}
+function exportChatJSON(){var data=getChatData();if(!data)return;downloadFile(JSON.stringify(data,null,2),'chat.json','application/json');showToast('Exported as JSON!');}
+function exportChatPDF(){var data=getChatData();if(!data)return;var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+data.title+'</title><style>body{font-family:Segoe UI,sans-serif;padding:40px;max-width:800px;margin:auto;line-height:1.7}h1{color:#8b4513}.msg{margin:15px 0;padding:12px;border-radius:10px}.user{background:#8b4513;color:#fff}.assistant{background:#faf5f0;border:1px solid #d2691e}.time{font-size:10px;color:#999}</style></head><body><h1>Safari AI Pro - Chat Export</h1>';data.messages.forEach(function(m){var cls=m.role==='user'?'user':'assistant';var name=m.role==='user'?'You':'Safari AI';html+='<div class="msg '+cls+'"><strong>'+name+'</strong><br>'+m.content.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')+'<div class="time">'+m.time+'</div></div>';});html+='</body></html>';var blob=new Blob([html],{type:'text/html'});var url=URL.createObjectURL(blob);var win=window.open(url,'_blank');setTimeout(function(){if(win)win.print();},500);showToast('PDF export opened! Press Ctrl+P to save.');}
 
-function exportChatJSON(){
-    var data=getChatData();
-    if(!data)return;
-    downloadFile(JSON.stringify(data,null,2),'chat.json','application/json');
-    showToast('Exported as JSON!');
-}
-
-function exportChatPDF(){
-    var data=getChatData();
-    if(!data)return;
-    var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+data.title+'</title>';
-    html+='<style>body{font-family:Segoe UI,sans-serif;padding:40px;max-width:800px;margin:auto;line-height:1.7}h1{color:#8b4513}.msg{margin:15px 0;padding:12px;border-radius:10px}.user{background:#8b4513;color:#fff}.assistant{background:#faf5f0;border:1px solid #d2691e}.time{font-size:10px;color:#999}</style></head><body>';
-    html+='<h1>Safari AI Pro - Chat Export</h1>';
-    data.messages.forEach(function(m){var cls=m.role==='user'?'user':'assistant';var name=m.role==='user'?'You':'Safari AI';html+='<div class="msg '+cls+'"><strong>'+name+'</strong><br>'+m.content.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')+'<div class="time">'+m.time+'</div></div>';});
-    html+='</body></html>';
-    var blob=new Blob([html],{type:'text/html'});
-    var url=URL.createObjectURL(blob);
-    var win=window.open(url,'_blank');
-    setTimeout(function(){if(win)win.print();},500);
-    showToast('PDF export opened! Press Ctrl+P to save.');
-}
-
-async function startRecording(){
-    if(isRecording){stopRecording();return;}
-    try{
-        const stream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1,sampleRate:16000,echoCancellation:true,noiseSuppression:true}});
-        const mimeType=MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':'audio/mp4';
-        mediaRecorder=new MediaRecorder(stream,{mimeType:mimeType});
-        audioChunks=[];
-        mediaRecorder.ondataavailable=function(e){if(e.data.size>0){audioChunks.push(e.data);}};
-        mediaRecorder.onstop=async function(){
-            const audioBlob=new Blob(audioChunks,{type:mimeType});
-            if(audioBlob.size<1000){showToast('Recording too short.');stream.getTracks().forEach(track=>track.stop());return;}
-            const formData=new FormData();
-            const ext=mimeType.includes('webm')?'webm':'m4a';
-            formData.append('audio',audioBlob,'recording.'+ext);
-            showToast('Transcribing...');
-            try{const r=await fetch('/api/v1/chat/transcribe',{method:'POST',body:formData});const d=await r.json();if(d.status==='success'&&d.transcript){document.getElementById('q').value=d.transcript;showToast('Voice transcribed!');}else{showToast('Could not transcribe.');}}catch(e){showToast('Transcription error.');}
-            stream.getTracks().forEach(track=>track.stop());
-        };
-        mediaRecorder.start(1000);
-        isRecording=true;
-        document.getElementById('micBtn').style.background='#ff6b6b';
-        document.getElementById('micBtn').textContent='Stop';
-        showToast('Recording... Click Stop.');
-    }catch(e){showToast('Microphone not available.');}
-}
-
-function stopRecording(){
-    if(mediaRecorder&&isRecording){
-        mediaRecorder.stop();
-        isRecording=false;
-        document.getElementById('micBtn').style.background='#e8f5e9';
-        document.getElementById('micBtn').textContent='Mic';
-    }
-}
-
+async function startRecording(){if(isRecording){stopRecording();return;}try{const stream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1,sampleRate:16000,echoCancellation:true,noiseSuppression:true}});const mimeType=MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':'audio/mp4';mediaRecorder=new MediaRecorder(stream,{mimeType:mimeType});audioChunks=[];mediaRecorder.ondataavailable=function(e){if(e.data.size>0){audioChunks.push(e.data);}};mediaRecorder.onstop=async function(){const audioBlob=new Blob(audioChunks,{type:mimeType});if(audioBlob.size<1000){showToast('Recording too short.');stream.getTracks().forEach(track=>track.stop());return;}const formData=new FormData();const ext=mimeType.includes('webm')?'webm':'m4a';formData.append('audio',audioBlob,'recording.'+ext);showToast('Transcribing...');try{const r=await fetch('/api/v1/chat/transcribe',{method:'POST',body:formData});const d=await r.json();if(d.status==='success'&&d.transcript){document.getElementById('q').value=d.transcript;showToast('Voice transcribed!');}else{showToast('Could not transcribe.');}}catch(e){showToast('Transcription error.');}stream.getTracks().forEach(track=>track.stop());};mediaRecorder.start(1000);isRecording=true;document.getElementById('micBtn').style.background='#ff6b6b';document.getElementById('micBtn').textContent='Stop';showToast('Recording... Click Stop.');}catch(e){showToast('Microphone not available.');}}
+function stopRecording(){if(mediaRecorder&&isRecording){mediaRecorder.stop();isRecording=false;document.getElementById('micBtn').style.background='#e8f5e9';document.getElementById('micBtn').textContent='Mic';}}
 function isLoggedIn(){return !!localStorage.getItem('safari_token');}
-
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3000);}
-async function fetchGuestStatus(){
-    try{var r=await fetch('/api/v1/chat/guest-status');var d=await r.json();if(d.status==='success'){guestRemaining=d.remaining;updateUserUI();}}catch(e){}
-}
-function updateUserUI(){
-    var token=localStorage.getItem('safari_token');
-    var name=localStorage.getItem('safari_name');
-    var guestBadge=document.getElementById('guestBadge');
-    var profileLink=document.getElementById('profileLink');
-    if(token&&name){
-        document.getElementById('userName').textContent=name;
-        document.getElementById('loginLink').style.display='none';
-        document.getElementById('logoutBtn').style.display='inline-block';
-        if(profileLink)profileLink.style.display='inline';
-        guestBadge.style.display='none';
-    }else{
-        document.getElementById('userName').textContent='';
-        document.getElementById('loginLink').style.display='inline';
-        document.getElementById('logoutBtn').style.display='none';
-        if(profileLink)profileLink.style.display='none';
-        if(guestRemaining!==null){
-            guestBadge.textContent='Guest: '+guestRemaining+' queries left';
-            guestBadge.style.display='inline-block';
-            if(guestRemaining<=3){guestBadge.style.background='#d32f2f';}else{guestBadge.style.background='#ff9800';}
-        }
-    }
-}
-function logoutUser(){
-    localStorage.clear();
-    chats={};
-    activeChat=null;
-    guestRemaining=null;
-    var id='chat_'+Date.now();
-    chats[id]={name:'New Chat',messages:[],timestamps:[]};
-    activeChat=id;
-    saveChats();
-    updateUserUI();
-    renderTabs();
-    renderMessages();
-    showToast('Logged out. Your chats are private.');
-}
+async function fetchGuestStatus(){try{var r=await fetch('/api/v1/chat/guest-status');var d=await r.json();if(d.status==='success'){guestRemaining=d.remaining;updateUserUI();}}catch(e){}}
+function updateUserUI(){var token=localStorage.getItem('safari_token');var name=localStorage.getItem('safari_name');var guestBadge=document.getElementById('guestBadge');var profileLink=document.getElementById('profileLink');if(token&&name){document.getElementById('userName').textContent=name;document.getElementById('loginLink').style.display='none';document.getElementById('logoutBtn').style.display='inline-block';if(profileLink)profileLink.style.display='inline';guestBadge.style.display='none';}else{document.getElementById('userName').textContent='';document.getElementById('loginLink').style.display='inline';document.getElementById('logoutBtn').style.display='none';if(profileLink)profileLink.style.display='none';if(guestRemaining!==null){guestBadge.textContent='Guest: '+guestRemaining+' queries left';guestBadge.style.display='inline-block';if(guestRemaining<=3){guestBadge.style.background='#d32f2f';}else{guestBadge.style.background='#ff9800';}}}}
+function logoutUser(){localStorage.clear();chats={};activeChat=null;guestRemaining=null;var id='chat_'+Date.now();chats[id]={name:'New Chat',messages:[],timestamps:[]};activeChat=id;saveChats();updateUserUI();renderTabs();renderMessages();showToast('Logged out.');}
 function loadChats(){try{var saved=localStorage.getItem('safari_pro_chats');if(saved)chats=JSON.parse(saved);}catch(e){chats={};}if(!chats||Object.keys(chats).length===0){chats={};var id='chat_'+Date.now();chats[id]={name:'New Chat',messages:[],timestamps:[]};saveChats();}}
 function saveChats(){try{localStorage.setItem('safari_pro_chats',JSON.stringify(chats));}catch(e){}}
 function getChatPreview(messages){if(!messages||messages.length===0)return'New Chat';for(var i=0;i<messages.length;i++){if(messages[i].startsWith('U:'))return messages[i].substring(2).substring(0,30);}return'Chat';}
-function renderTabs(){var tabs=document.getElementById('tabs');if(!tabs)return;tabs.innerHTML='';var chatIds=Object.keys(chats);chatIds.forEach(function(id){var chat=chats[id];if(!chat.name||chat.name==='New Chat'){chat.name=getChatPreview(chat.messages);}var tab=document.createElement('div');tab.className='tab'+(id===activeChat?' active':'');var nameSpan=document.createElement('span');nameSpan.className='tab-name';nameSpan.textContent=chat.name.length>20?chat.name.substring(0,20)+'...':chat.name;tab.appendChild(nameSpan);tab.addEventListener('click',function(e){if(e.target.classList.contains('del')||e.target.classList.contains('rename-btn'))return;switchChat(id);});if(chatIds.length>1){var renameBtn=document.createElement('span');renameBtn.className='rename-btn';renameBtn.textContent='R';renameBtn.addEventListener('click',function(e){e.stopPropagation();renameChatTab(id);});tab.appendChild(renameBtn);var del=document.createElement('span');del.className='del';del.textContent='x';del.addEventListener('click',function(e){e.stopPropagation();if(confirm('Delete this chat?')){deleteChat(id);}});tab.appendChild(del);}tabs.appendChild(tab);});var addBtn=document.createElement('div');addBtn.className='tab add';addBtn.textContent='+';addBtn.addEventListener('click',newChat);tabs.appendChild(addBtn);}
+function renderTabs(){var tabs=document.getElementById('tabs');if(!tabs)return;tabs.innerHTML='';var chatIds=Object.keys(chats);chatIds.forEach(function(id){var chat=chats[id];if(!chat.name||chat.name==='New Chat'){chat.name=getChatPreview(chat.messages);}var tab=document.createElement('div');tab.className='tab'+(id===activeChat?' active':'');var nameSpan=document.createElement('span');nameSpan.className='tab-name';nameSpan.textContent=chat.name.length>20?chat.name.substring(0,20)+'...':chat.name;tab.appendChild(nameSpan);tab.addEventListener('click',function(e){if(e.target.classList.contains('del')||e.target.classList.contains('rename-btn'))return;switchChat(id);});if(chatIds.length>1){var renameBtn=document.createElement('span');renameBtn.className='rename-btn';renameBtn.textContent='R';renameBtn.title='Rename';renameBtn.addEventListener('click',function(e){e.stopPropagation();renameChatTab(id);});tab.appendChild(renameBtn);var del=document.createElement('span');del.className='del';del.textContent='x';del.title='Delete';del.addEventListener('click',function(e){e.stopPropagation();if(confirm('Delete this chat?')){deleteChat(id);}});tab.appendChild(del);}tabs.appendChild(tab);});var addBtn=document.createElement('div');addBtn.className='tab add';addBtn.textContent='+';addBtn.title='New Chat';addBtn.addEventListener('click',newChat);tabs.appendChild(addBtn);}
 function renameChatTab(id){var chat=chats[id];var newName=prompt('Enter new name:',chat.name||'New Chat');if(newName&&newName.trim()){chat.name=newName.trim();saveChats();renderTabs();}}
 function switchChat(id){activeChat=id;renderTabs();renderMessages();}
 function newChat(){var chatIds=Object.keys(chats);for(var i=0;i<chatIds.length;i++){var c=chats[chatIds[i]];if(!c.messages||c.messages.length===0){activeChat=chatIds[i];renderTabs();renderMessages();return;}}var id='chat_'+Date.now();chats[id]={name:'New Chat',messages:[],timestamps:[]};activeChat=id;saveChats();renderTabs();renderMessages();}
@@ -318,71 +197,9 @@ function copyMessage(text,btn){navigator.clipboard.writeText(text).then(function
 function editMessage(index,msgDiv){var chat=chats[activeChat];var msg=chat.messages[index];var content=msg.substring(2);var editDiv=document.createElement('div');editDiv.className='m u';editDiv.style.width='75%';var input=document.createElement('textarea');input.className='edit-input';input.value=content;input.rows=Math.min(5,content.split('\n').length);editDiv.appendChild(input);var actions=document.createElement('div');actions.className='edit-actions';var saveBtn=document.createElement('button');saveBtn.className='btn-save';saveBtn.textContent='Save';saveBtn.onclick=function(){var newContent=input.value.trim();if(newContent){chat.messages=chat.messages.slice(0,index);chat.timestamps=chat.timestamps.slice(0,index);chat.messages.push('U:'+newContent);chat.timestamps.push(Date.now());saveChats();renderMessages();setProcessing(true);sendEditedMessage(newContent);}};var cancelBtn=document.createElement('button');cancelBtn.className='btn-cancel';cancelBtn.textContent='Cancel';cancelBtn.onclick=function(){renderMessages();};actions.appendChild(saveBtn);actions.appendChild(cancelBtn);editDiv.appendChild(actions);msgDiv.parentElement.replaceChild(editDiv,msgDiv);input.focus();}
 async function sendEditedMessage(question){try{var form=new FormData();form.append('question',question);form.append('session_id',activeChat);var token=localStorage.getItem('safari_token');if(token)form.append('token',token);var r=await fetch('/api/v1/chat/ask',{method:'POST',body:form});var d=await r.json();var errMsg=d.response||d.detail||JSON.stringify(d);chats[activeChat].messages.push('S:'+errMsg);chats[activeChat].timestamps.push(Date.now());}catch(e){chats[activeChat].messages.push('S:Connection error.');chats[activeChat].timestamps.push(Date.now());}saveChats();renderMessages();setProcessing(false);}
 function addWarningToChat(remaining){var box=document.getElementById('b');var wrapper=document.createElement('div');wrapper.className='m-wrapper bot';wrapper.innerHTML='<div class="warning-msg">Warning: You have '+remaining+' free queries left. <a href="/login">Login now</a> for unlimited access.</div>';box.appendChild(wrapper);box.scrollTop=box.scrollHeight;if(!chats[activeChat])return;chats[activeChat].messages.push('W:'+remaining);chats[activeChat].timestamps.push(Date.now());saveChats();}
-function renderMessages(){var box=document.getElementById('b');if(!box)return;box.innerHTML='';if(!activeChat||!chats[activeChat])return;var msgs=chats[activeChat].messages||[];var times=chats[activeChat].timestamps||[];if(msgs.length===0){box.innerHTML='<div class="m s" style="max-width:60%">&#x1F981; Hello! Ask me anything or attach a file!</div>';}msgs.forEach(function(m,i){var wrapper=document.createElement('div');wrapper.setAttribute('data-msg-index',i);if(m.startsWith('U:')){wrapper.className='m-wrapper user';var msgDiv=document.createElement('div');msgDiv.className='m u';msgDiv.textContent=m.substring(2);wrapper.appendChild(msgDiv);var actions=document.createElement('div');actions.className='msg-actions';var editBtn=document.createElement('button');editBtn.className='msg-action-btn btn-edit';editBtn.textContent='E';editBtn.onclick=function(){editMessage(i,msgDiv);};actions.appendChild(editBtn);wrapper.appendChild(actions);}else if(m.startsWith('S:')){wrapper.className='m-wrapper bot';var msgDiv2=document.createElement('div');msgDiv2.className='m s markdown-body';msgDiv2.innerHTML=renderMarkdown(m.substring(2));wrapper.appendChild(msgDiv2);var actions2=document.createElement('div');actions2.className='msg-actions';var copyBtn=document.createElement('button');copyBtn.className='msg-action-btn btn-copy';copyBtn.textContent='C';copyBtn.onclick=function(){copyMessage(m.substring(2),copyBtn);};actions2.appendChild(copyBtn);wrapper.appendChild(actions2);}else if(m.startsWith('W:')){wrapper.className='m-wrapper bot';wrapper.innerHTML='<div class="warning-msg">Warning: You have '+m.substring(2)+' free queries left. <a href="/login">Login now</a> for unlimited access.</div>';}if(times[i]){var timeStamp=document.createElement('div');timeStamp.className='time-stamp';timeStamp.textContent=new Date(times[i]).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});wrapper.appendChild(timeStamp);}box.appendChild(wrapper);});addCodeButtons(box);box.scrollTop=box.scrollHeight;}
+function renderMessages(){var box=document.getElementById('b');if(!box)return;box.innerHTML='';if(!activeChat||!chats[activeChat])return;var msgs=chats[activeChat].messages||[];var times=chats[activeChat].timestamps||[];if(msgs.length===0){box.innerHTML='<div class="m s" style="max-width:60%">&#x1F981; Hello! Ask me anything or attach a file!</div>';}msgs.forEach(function(m,i){var wrapper=document.createElement('div');if(m.startsWith('U:')){wrapper.className='m-wrapper user';var msgDiv=document.createElement('div');msgDiv.className='m u';msgDiv.textContent=m.substring(2);wrapper.appendChild(msgDiv);var actions=document.createElement('div');actions.className='msg-actions';var editBtn=document.createElement('button');editBtn.className='msg-action-btn btn-edit';editBtn.textContent='E';editBtn.onclick=function(){editMessage(i,msgDiv);};actions.appendChild(editBtn);wrapper.appendChild(actions);}else if(m.startsWith('S:')){wrapper.className='m-wrapper bot';var msgDiv2=document.createElement('div');msgDiv2.className='m s markdown-body doc-download-ready';msgDiv2.innerHTML=renderMarkdown(m.substring(2));wrapper.appendChild(msgDiv2);var actions2=document.createElement('div');actions2.className='msg-actions';var copyBtn=document.createElement('button');copyBtn.className='msg-action-btn btn-copy';copyBtn.textContent='C';copyBtn.onclick=function(){copyMessage(m.substring(2),copyBtn);};actions2.appendChild(copyBtn);wrapper.appendChild(actions2);}else if(m.startsWith('W:')){wrapper.className='m-wrapper bot';wrapper.innerHTML='<div class="warning-msg">Warning: You have '+m.substring(2)+' free queries left. <a href="/login">Login now</a> for unlimited access.</div>';}if(times[i]){var timeStamp=document.createElement('div');timeStamp.className='time-stamp';timeStamp.textContent=new Date(times[i]).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});wrapper.appendChild(timeStamp);}box.appendChild(wrapper);});addCodeButtons(box);addDocumentButtons(box);box.scrollTop=box.scrollHeight;}
 function setProcessing(state){isProcessing=state;var btn=document.getElementById('askBtn');var typing=document.getElementById('typing');if(state){btn.disabled=true;btn.textContent='Thinking...';typing.classList.add('show');}else{btn.disabled=false;btn.textContent='Ask';typing.classList.remove('show');}}
-async function ask(){
-    if(isProcessing)return;
-    var input=document.getElementById('q');
-    var question=input.value.trim();
-    if(!question&&!pendingFile)return;
-    if(question.length>2000){showToast('Message too long.');return;}
-    if(!activeChat||!chats[activeChat])newChat();
-    if(!chats[activeChat].messages)chats[activeChat].messages=[];
-    if(!chats[activeChat].timestamps)chats[activeChat].timestamps=[];
-    var displayText=question;
-    if(pendingFile){displayText=question?question+' [Attached: '+pendingFile.name+']':'[Attached: '+pendingFile.name+']';}
-    chats[activeChat].messages.push('U:'+displayText);
-    chats[activeChat].timestamps.push(Date.now());
-    saveChats();
-    renderTabs();
-    renderMessages();
-    input.value='';
-    var preview=document.getElementById('filePreview');
-    preview.style.display='none';
-    setProcessing(true);
-    try{
-        if(pendingFile){
-            var uploadForm=new FormData();
-            uploadForm.append('session_id',activeChat);
-            uploadForm.append('file',pendingFile);
-            var uploadResp=await fetch('/api/v1/upload/',{method:'POST',body:uploadForm});
-            var uploadData=await uploadResp.json();
-            if(uploadData.status==='success'){
-                var askForm=new FormData();
-                askForm.append('session_id',activeChat);
-                askForm.append('question',question||'Please analyze the attached file');
-                var token=localStorage.getItem('safari_token');
-                if(token)askForm.append('token',token);
-                var askResp=await fetch('/api/v1/chat/ask',{method:'POST',body:askForm});
-                var askData=await askResp.json();
-                var errMsg2=askData.response||askData.detail||JSON.stringify(askData);
-                chats[activeChat].messages.push('S:'+errMsg2);
-                chats[activeChat].timestamps.push(Date.now());
-            }else{
-                chats[activeChat].messages.push('S:'+(uploadData.detail||'Upload failed.'));
-                chats[activeChat].timestamps.push(Date.now());
-            }
-            pendingFile=null;
-        }else{
-            var form=new FormData();
-            form.append('question',question);
-            form.append('session_id',activeChat);
-            var token=localStorage.getItem('safari_token');
-            if(token)form.append('token',token);
-            var r=await fetch('/api/v1/chat/ask',{method:'POST',body:form});
-            var d=await r.json();
-            var errMsg3=d.response||d.detail||JSON.stringify(d);
-            chats[activeChat].messages.push('S:'+errMsg3);
-            chats[activeChat].timestamps.push(Date.now());
-        }
-    }catch(e){
-        chats[activeChat].messages.push('S:Connection error.');
-        chats[activeChat].timestamps.push(Date.now());
-    }
-    saveChats();
-    renderMessages();
-    setProcessing(false);
-}
+async function ask(){if(isProcessing)return;var input=document.getElementById('q');var question=input.value.trim();if(!question&&!pendingFile)return;if(question.length>2000){showToast('Message too long.');return;}if(!activeChat||!chats[activeChat])newChat();if(!chats[activeChat].messages)chats[activeChat].messages=[];if(!chats[activeChat].timestamps)chats[activeChat].timestamps=[];var displayText=question;if(pendingFile){displayText=question?question+' [Attached: '+pendingFile.name+']':'[Attached: '+pendingFile.name+']';}chats[activeChat].messages.push('U:'+displayText);chats[activeChat].timestamps.push(Date.now());saveChats();renderTabs();renderMessages();input.value='';var preview=document.getElementById('filePreview');preview.style.display='none';setProcessing(true);try{if(pendingFile){var uploadForm=new FormData();uploadForm.append('session_id',activeChat);uploadForm.append('file',pendingFile);var uploadResp=await fetch('/api/v1/upload/',{method:'POST',body:uploadForm});var uploadData=await uploadResp.json();if(uploadData.status==='success'){var askForm=new FormData();askForm.append('session_id',activeChat);askForm.append('question',question||'Please analyze the attached file');var token=localStorage.getItem('safari_token');if(token)askForm.append('token',token);var askResp=await fetch('/api/v1/chat/ask',{method:'POST',body:askForm});var askData=await askResp.json();var errMsg2=askData.response||askData.detail||JSON.stringify(askData);chats[activeChat].messages.push('S:'+errMsg2);chats[activeChat].timestamps.push(Date.now());}else{chats[activeChat].messages.push('S:'+(uploadData.detail||'Upload failed.'));chats[activeChat].timestamps.push(Date.now());}pendingFile=null;}else{var form=new FormData();form.append('question',question);form.append('session_id',activeChat);var token=localStorage.getItem('safari_token');if(token)form.append('token',token);var r=await fetch('/api/v1/chat/ask',{method:'POST',body:form});var d=await r.json();var errMsg3=d.response||d.detail||JSON.stringify(d);chats[activeChat].messages.push('S:'+errMsg3);chats[activeChat].timestamps.push(Date.now());}}catch(e){chats[activeChat].messages.push('S:Connection error.');chats[activeChat].timestamps.push(Date.now());}saveChats();renderMessages();setProcessing(false);}
 function selectFile(input){var file=input.files[0];if(!file)return;if(file.size>2*1024*1024){showToast('File too large.');input.value='';return;}pendingFile=file;var preview=document.getElementById('filePreview');document.getElementById('fileName').textContent=file.name;preview.style.display='flex';showToast('File ready.');}
 function clearAttachment(){pendingFile=null;var input=document.getElementById('fileInput');input.value='';document.getElementById('filePreview').style.display='none';showToast('Attachment removed.');}
 document.addEventListener('keydown',function(e){if(e.ctrlKey&&e.key==='f'){e.preventDefault();toggleSearch();}});
