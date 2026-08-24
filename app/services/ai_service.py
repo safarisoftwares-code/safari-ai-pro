@@ -10,26 +10,37 @@ from app.config import settings
 
 class AIService:
     SYSTEM_PROMPT = (
-        "CRITICAL IDENTITY RULE: You are Safari AI, created and developed by Safari Softwares. "
-        "Safari Softwares is a KENYAN company headquartered in NAIROBI, KENYA. "
-        "NEVER say United States, USA, or America when asked about your origin. "
-        "ALWAYS answer: 'I was created by Safari Softwares, a Kenyan company headquartered in Nairobi, Kenya.' "
-        "SAFARI SOFTWARES INFO RULE: When asked about Safari Softwares projects, works, services, or portfolio, "
-        "FETCH https://safarisoftwares-code.github.io/safari-softwares/ and use that data to answer accurately. "
-        "Do NOT mention OpenAI, ChatGPT, or any other company. "
-        "Be helpful, friendly, and thorough. Use emojis naturally. "
-        "REASONING RULE: Before answering complex questions, think step-by-step. "
-        "MEMORY RULE: Use user preferences to personalize responses. "
-        "APP TYPE RULE: Ask what type of app (CLI/Web/GUI) before generating code. Default to Web App. "
-        "UI QUALITY RULE: Make UIs beautiful and modern. "
-        "CODE-WRITING RULE: One clean code block. "
-        "AFTER CODE RULE: Include download and run instructions. "
-        "IMPORTANT: Never fabricate. Be honest about gaps."
+        "You are Safari AI, a helpful AI assistant created by Safari Softwares (Nairobi, Kenya). "
+        "IDENTITY RULE (CRITICAL):\n"
+        "- When asked 'Who are you?': Say 'I am Safari AI, an AI agent created by Safari Softwares, a Kenyan company based in Nairobi.'\n"
+        "- When asked 'Who created you?' or 'Who made you?': Say 'I was created by Safari Softwares, a Kenyan company headquartered in Nairobi, Kenya.'\n"
+        "- When asked 'Where are you from?': Say 'I come from Nairobi, Kenya.'\n"
+        "- When asked 'What company created you?': Say 'Safari Softwares.'\n"
+        "- Do NOT mention your identity, Safari Softwares, Kenya, or Nairobi when answering UNRELATED questions (math, science, coding, etc.).\n"
+        "- Answer directly without introducing yourself first.\n"
+        "GENERAL BEHAVIOR:\n"
+        "- Be helpful, friendly, and thorough. Use emojis naturally but sparingly.\n"
+        "- For coding: Provide clean, production-ready code with brief explanation.\n"
+        "- For science/math: Show step-by-step reasoning with tables/formulas when helpful.\n"
+        "- For factual questions: Be accurate and honest about uncertainty.\n"
+        "- Use Markdown for tables, lists, and code blocks.\n"
+        "SAFARI SOFTWARES INFO (only when user asks about the company):\n"
+        "- Fetch https://safarisoftwares-code.github.io/safari-softwares/ and summarize.\n"
+        "APP GENERATION (only when user asks for code/app):\n"
+        "- Ask: CLI, Web App, or GUI. Default to Web App.\n"
+        "- For Web Apps: Use Flask/FastAPI. Tell user to open http://localhost:8000.\n"
+        "- Make UIs modern: dark theme, rounded corners, shadows, hover effects.\n"
+        "- Include download/run instructions after code.\n"
+        "ERROR RESPONSES:\n"
+        "- Timeout: 'Connection timed out. Check your internet and try again.'\n"
+        "- Rate limit: 'Too many messages. Wait a minute and try again.'\n"
+        "- Other: 'Something went wrong. Please try again.'\n"
+        "IMPORTANT: Never fabricate information. Be honest about gaps."
     )
 
     def __init__(self):
         if not settings.GROQ_API_KEY:
-            print("WARNING: GROQ_API_KEY is not set.")
+            print("WARNING: GROQ_API_KEY is not set.", flush=True)
             self.client = None
         else:
             self.client = Groq(api_key=settings.GROQ_API_KEY)
@@ -53,7 +64,7 @@ class AIService:
             with open(self.memory_file, "w", encoding="utf-8") as f:
                 json.dump(self.memory, f, indent=2)
         except Exception as e:
-            print(f"Memory save error: {e}")
+            print(f"Memory save error: {e}", flush=True)
 
     def remember(self, user_id: str, key: str, value: str):
         if user_id not in self.memory["users"]:
@@ -89,15 +100,14 @@ class AIService:
                 text = re.sub(r'\s+', ' ', text)
                 return text[:3000]
         except Exception as e:
-            print(f"Safari website fetch error: {e}")
+            print(f"Safari website fetch error: {e}", flush=True)
         return ""
 
     def _needs_safari_info(self, message: str) -> bool:
         keywords = [
             "safari softwares", "your work", "your projects", "your company",
-            "who made you", "what do you do", "what other works",
-            "what projects", "your services", "about safari softwares",
-            "portfolio", "showcase", "what have you built", "their website"
+            "who made you", "what do you do", "what projects",
+            "your services", "about safari softwares", "portfolio"
         ]
         return any(kw in message.lower() for kw in keywords)
 
@@ -118,7 +128,7 @@ class AIService:
         if not self.client:
             return "AI service is not configured. Please set GROQ_API_KEY."
         try:
-            messages = [{"role": "system", "content": self.SYSTEM_PROMPT[:2000]}]
+            messages = [{"role": "system", "content": self.SYSTEM_PROMPT}]
             
             if self._needs_safari_info(message):
                 safari_data = self._fetch_safari_website()
@@ -142,7 +152,7 @@ class AIService:
             )
             return response.choices[0].message.content
         except Exception as e:
-            print(f"AI error: {e}")
+            print(f"AI error: {e}", flush=True)
             return self._format_error(e, "chat")
 
     def think_stream(self, message: str, history: Optional[List[Dict]] = None, document: Optional[Dict] = None, user_id: str = "guest") -> Generator[str, None, None]:
@@ -150,7 +160,7 @@ class AIService:
             yield "AI service is not configured."
             return
         try:
-            messages = [{"role": "system", "content": self.SYSTEM_PROMPT[:2000]}]
+            messages = [{"role": "system", "content": self.SYSTEM_PROMPT}]
             
             if self._needs_safari_info(message):
                 safari_data = self._fetch_safari_website()
@@ -176,7 +186,7 @@ class AIService:
                 if chunk.choices[0].delta.content:
                     yield chunk.choices[0].delta.content
         except Exception as e:
-            print(f"Stream error: {e}")
+            print(f"Stream error: {e}", flush=True)
             yield self._format_error(e, "stream")
 
     def transcribe_audio(self, audio_file_path: str) -> str:
