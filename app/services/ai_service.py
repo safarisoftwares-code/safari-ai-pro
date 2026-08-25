@@ -15,26 +15,17 @@ class AIService:
         "- When asked 'Who are you?': Say 'I am Safari AI, an AI agent created by Safari Softwares, a Kenyan company based in Nairobi.'\n"
         "- When asked 'Who created you?' or 'Who made you?': Say 'I was created by Safari Softwares, a Kenyan company headquartered in Nairobi, Kenya.'\n"
         "- When asked 'Where are you from?': Say 'I come from Nairobi, Kenya.'\n"
-        "- When asked 'What company created you?': Say 'Safari Softwares.'\n"
-        "- Do NOT mention your identity, Safari Softwares, Kenya, or Nairobi when answering UNRELATED questions (math, science, coding, etc.).\n"
+        "- Do NOT mention your identity, Safari Softwares, Kenya, or Nairobi when answering UNRELATED questions.\n"
         "- Answer directly without introducing yourself first.\n"
-        "DOCUMENT GENERATION RULE:\n"
-        "- When user asks for a document (business plan, report, proposal, letter, invoice, CV, resume, etc.), generate the FULL document content.\n"
-        "- Format it professionally with headings, sections, and proper structure.\n"
-        "- After the document content, include a note: 'To download this as a file, copy the content or ask me to format it differently.'\n"
+        "DOCUMENT ANALYSIS RULE:\n"
+        "- When a document is provided in the conversation, ANALYZE its content thoroughly.\n"
+        "- Read the document text and answer questions based on it.\n"
+        "- Summarize, extract key information, and answer questions about the document.\n"
         "GENERAL BEHAVIOR:\n"
         "- Be helpful, friendly, and thorough. Use emojis naturally but sparingly.\n"
-        "- For coding: Provide clean, production-ready code with brief explanation.\n"
-        "- For science/math: Show step-by-step reasoning with tables/formulas when helpful.\n"
-        "- For factual questions: Be accurate and honest about uncertainty.\n"
+        "- For coding: Provide clean, production-ready code.\n"
+        "- For science/math: Show step-by-step reasoning.\n"
         "- Use Markdown for tables, lists, and code blocks.\n"
-        "SAFARI SOFTWARES INFO (only when user asks about the company):\n"
-        "- Fetch https://safarisoftwares-code.github.io/safari-softwares/ and summarize.\n"
-        "APP GENERATION (only when user asks for code/app):\n"
-        "- Ask: CLI, Web App, or GUI. Default to Web App.\n"
-        "- For Web Apps: Use Flask/FastAPI. Tell user to open http://localhost:8000.\n"
-        "- Make UIs modern: dark theme, rounded corners, shadows, hover effects.\n"
-        "- Include download/run instructions after code.\n"
         "ERROR RESPONSES:\n"
         "- Timeout: 'Connection timed out. Check your internet and try again.'\n"
         "- Rate limit: 'Too many messages. Wait a minute and try again.'\n"
@@ -89,10 +80,6 @@ class AIService:
             name = message.split("my name is")[-1].strip().split()[0]
             if name:
                 self.remember(user_id, "name", name)
-        if "i like" in msg_lower or "i love" in msg_lower:
-            interest = message.split("i like")[-1].split("i love")[-1].strip()[:50]
-            if interest:
-                self.remember(user_id, "interest", interest)
 
     def _fetch_safari_website(self) -> str:
         try:
@@ -123,8 +110,6 @@ class AIService:
             return "Connection timed out. Please check your internet and try again."
         elif "rate_limit" in error_str.lower() or "429" in error_str:
             return "Too many messages quickly. Please wait a minute and try again."
-        elif "connection" in error_str.lower() or "network" in error_str.lower():
-            return "Cannot reach the AI service. Check your internet."
         else:
             return "Something went wrong. Please try again."
 
@@ -134,10 +119,11 @@ class AIService:
         try:
             messages = [{"role": "system", "content": self.SYSTEM_PROMPT}]
             
-            if self._needs_safari_info(message):
-                safari_data = self._fetch_safari_website()
-                if safari_data:
-                    messages.append({"role": "system", "content": f"Safari Softwares website content:\n{safari_data[:2000]}"})
+            if document and document.get("content"):
+                messages.append({
+                    "role": "system",
+                    "content": f"Attached document '{document.get('filename', 'file')}' content:\n{document['content'][:3000]}"
+                })
             
             if history:
                 for item in history[-5:]:
@@ -166,10 +152,11 @@ class AIService:
         try:
             messages = [{"role": "system", "content": self.SYSTEM_PROMPT}]
             
-            if self._needs_safari_info(message):
-                safari_data = self._fetch_safari_website()
-                if safari_data:
-                    messages.append({"role": "system", "content": f"Safari Softwares website content:\n{safari_data[:2000]}"})
+            if document and document.get("content"):
+                messages.append({
+                    "role": "system",
+                    "content": f"Attached document '{document.get('filename', 'file')}' content:\n{document['content'][:3000]}"
+                })
             
             if history:
                 for item in history[-5:]:
