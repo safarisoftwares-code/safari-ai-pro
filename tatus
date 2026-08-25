@@ -1,0 +1,5 @@
+[33md1f2aee[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Add proprietary license - protect Safari AI Pro
+[33m16f7e5c[m Add MIT License
+[33m6311785[m Move guest limit to .env, use settings for all limits
+[33m8829bc1[m Auto-update users to 30000 daily limit
+[33mcdf79c0[m Fix PDF analysis, image handling with camera icon, 10MB limit, 30000 daily queries, API key improvements
