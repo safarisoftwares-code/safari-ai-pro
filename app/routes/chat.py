@@ -17,7 +17,7 @@ from app.routes.upload import uploaded_documents
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
 ai_service = AIService()
 
-GUEST_LIMIT = 8
+GUEST_LIMIT = settings.GUEST_LIMIT
 GUEST_WARNING_THRESHOLD = 5
 GUEST_RESET_HOURS = 24
 
@@ -89,8 +89,8 @@ async def ask(
     image_info = None
     if image:
         image_content = await image.read()
-        if len(image_content) > 10 * 1024 * 1024:
-            raise HTTPException(status_code=400, detail="Image too large. Maximum 10MB.")
+        if len(image_content) > settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024:
+            raise HTTPException(status_code=400, detail=f"Image too large. Maximum {settings.MAX_UPLOAD_SIZE_MB}MB.")
         image_info = {"filename": image.filename, "size_kb": round(len(image_content) / 1024, 1)}
         question = f"The user uploaded an image called '{image.filename}' ({image_info['size_kb']} KB). Safari AI Pro currently does not support direct image analysis/vision. Please inform the user politely that image analysis is under development and suggest they describe what they need help with regarding the image."
 
@@ -123,7 +123,7 @@ async def ask(
         ip = get_client_ip(request)
         status = check_guest_quota(ip)
         if status["blocked"]:
-            raise HTTPException(status_code=429, detail="Free limit reached. Please login.")
+            raise HTTPException(status_code=429, detail=f"Free limit of {GUEST_LIMIT} queries reached. Please login to continue.")
         increment_guest_quota(ip)
 
     history = []
