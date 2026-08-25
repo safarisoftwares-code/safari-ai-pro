@@ -92,7 +92,7 @@ async def ask(
         if len(image_content) > 10 * 1024 * 1024:
             raise HTTPException(status_code=400, detail="Image too large. Maximum 10MB.")
         image_info = {"filename": image.filename, "size_kb": round(len(image_content) / 1024, 1)}
-        question = f"The user uploaded an image called '{image.filename}' ({image_info['size_kb']} KB). Acknowledge the image upload."
+        question = f"The user uploaded an image called '{image.filename}' ({image_info['size_kb']} KB). Safari AI Pro currently does not support direct image analysis/vision. Please inform the user politely that image analysis is under development and suggest they describe what they need help with regarding the image."
 
     if not question and not image_info:
         raise HTTPException(status_code=400, detail="Question cannot be empty")
