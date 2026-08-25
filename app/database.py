@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+﻿from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
@@ -33,3 +33,13 @@ def get_db() -> Generator[Session, None, None]:
 def init_db() -> None:
     from app.models import User, Chat, APIKey, RevokedToken
     Base.metadata.create_all(bind=engine)
+    
+    db = SessionLocal()
+    users = db.query(User).all()
+    for u in users:
+        if u.daily_limit < 30000:
+            u.daily_limit = 30000
+            u.plan = 'enterprise'
+            print(f"Updated {u.email} to 30000 daily queries", flush=True)
+    db.commit()
+    db.close()
