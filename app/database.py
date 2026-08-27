@@ -31,15 +31,19 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 def init_db() -> None:
-    from app.models import User, Chat, APIKey, RevokedToken
+    from app.models import User, Chat, APIKey, RevokedToken, Learning
     Base.metadata.create_all(bind=engine)
     
     db = SessionLocal()
     users = db.query(User).all()
     for u in users:
-        if u.daily_limit < 30000:
-            u.daily_limit = 30000
-            u.plan = 'enterprise'
-            print(f"Updated {u.email} to 30000 daily queries", flush=True)
+        correct_limit = {
+            "free": settings.DAILY_FREE_LIMIT,
+            "pro": settings.DAILY_PRO_LIMIT,
+            "enterprise": settings.DAILY_ENTERPRISE_LIMIT
+        }.get(u.plan, settings.DAILY_FREE_LIMIT)
+        if u.daily_limit != correct_limit:
+            u.daily_limit = correct_limit
+            print(f"Updated {u.email} ({u.plan}) to {correct_limit}", flush=True)
     db.commit()
     db.close()
