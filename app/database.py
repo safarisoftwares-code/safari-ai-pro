@@ -1,4 +1,4 @@
-﻿from sqlalchemy import create_engine
+﻿from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
@@ -33,6 +33,17 @@ def get_db() -> Generator[Session, None, None]:
 def init_db() -> None:
     from app.models import User, Chat, APIKey, RevokedToken, Learning
     Base.metadata.create_all(bind=engine)
+    
+    # Add missing columns for PostgreSQL (free tier no shell)
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS email VARCHAR(120)"))
+            conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS queries_today INTEGER DEFAULT 0"))
+            conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS last_used_date VARCHAR(10)"))
+            conn.commit()
+            print("Database columns verified", flush=True)
+    except Exception as e:
+        print(f"Column check: {e}", flush=True)
     
     db = SessionLocal()
     users = db.query(User).all()
