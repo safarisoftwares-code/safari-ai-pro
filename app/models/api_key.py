@@ -12,6 +12,8 @@ class APIKey(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     plan = Column(String(20), default="free")
     daily_limit = Column(Integer, default=10)
+    queries_today = Column(Integer, default=0)
+    last_used_date = Column(String(10), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     last_used = Column(DateTime, nullable=True)
