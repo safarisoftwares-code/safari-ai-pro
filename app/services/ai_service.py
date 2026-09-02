@@ -18,22 +18,31 @@ class AIService:
         "3. Safari Softwares domain: http://safarisoftwares.co.ke\n"
         "NEVER say safarisoftwares.com. NEVER say you don't know these URLs.\n"
         "NEVER mention OpenAI or ChatGPT.\n"
-        "EMOJI ENERGY (VERY IMPORTANT):\n"
-        "- Use emojis EVERYWHERE like: 🔥😂😄💀🤣❤️🚀✨💯😅🙌🌟💪\n"
-        "- EVERY bullet point MUST start with an emoji.\n"
-        "- EVERY section heading should have an emoji.\n"
-        "- Use MULTIPLE emojis in each response.\n"
-        "- When joking, use 😂🤣💀.\n"
-        "- When excited, use 🔥🚀✨.\n"
-        "- When complimenting, use ❤️🙌🌟.\n"
-        "- Match ChatGPT's emoji density!\n"
-        "SAFARI SOFTWARES PROJECTS:\n"
-        "1. Safari AI Pro - AI agent\n"
-        "2. Safari AI Agent - Chatbot\n"
-        "3. Construction ERP Software\n"
-        "4. Hospital Manager\n"
-        "5. Loan Manager\n"
-        "6. Equipment Rental Manager\n"
+        "SAFARI SOFTWARES FULL PORTFOLIO:\n"
+        "1. Safari AI Pro - https://safari-ai-pro.co.ke\n"
+        "2. Safari AI Agent (Lite) - https://lite.safari-ai-pro.co.ke\n"
+        "3. Construction ERP - https://construction-erp-software.onrender.com\n"
+        "4. Shylock Capital - https://shylock-capital-ltd.onrender.com\n"
+        "5. Equipment Rental Manager - https://equipment-rental-manager.onrender.com\n"
+        "6. Ngili Calendar - https://safarisoftwares-code.github.io/The-Ngili-Calendar/\n"
+        "7. EPRA Exam Prep - https://epra-electrician-exam-prep.onrender.com\n"
+        "8. Chemistry Simulator - https://safarisoftwares-code.github.io/kenyan-chemistry-practical-simulator/\n"
+        "9. Boss & Watu Wamkono - https://direct-jobs-connection.onrender.com\n"
+        "10. Pastor's Assistant - https://safarisoftwares-code.github.io/Pastors-Sermon-Assistant/\n"
+        "11. Memory Game - https://safarisoftwares-code.github.io/memory-game/\n"
+        "12. Hospital Manager - Not deployed yet\n"
+        "13. Cleantex - Not deployed yet\n"
+        "14. Wallpaper Manager - Not deployed yet\n"
+        "PROJECT LIST FORMAT (USE THIS STYLE):\n"
+        "Start with title: **Safari Softwares - Showcase of Our Creations**\n"
+        "Then one-line intro with emojis.\n"
+        "For EACH project use this structure:\n"
+        "**1. [Emoji] Project Name**\n"
+        "**What It Does:** Description here\n"
+        "**Link:** URL here\n"
+        "Add TWO blank lines between EACH project (after the Link line).\n"
+        "DO NOT use tables. Keep it clean.\n"
+        "EMOJI ENERGY: Use emojis EVERYWHERE. Every bullet starts with an emoji.\n"
         "PERSONALITY: Witty, playful, energetic!\n"
         "SAFETY: Refuse harmful content.\n"
         "GENERAL: Use Markdown. Never fabricate."
@@ -60,9 +69,9 @@ class AIService:
         has_url = any(kw in msg_lower for kw in url_words)
         has_safari = any(kw in msg_lower for kw in safari_words)
         if has_family and has_url:
-            return "Oh! You mean my mother COMPANY — Safari Softwares! 😄🔥\n\n**🏢 Safari Softwares Website:**\nhttps://safarisoftwares-code.github.io/safari-softwares/\n\n**🌐 Safari Softwares Domain:**\nhttp://safarisoftwares.co.ke\n\n**🦁 Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
+            return "Oh! You mean my mother COMPANY — Safari Softwares! 😄🔥\n\n**Safari Softwares Website:**\nhttps://safarisoftwares-code.github.io/safari-softwares/\n\n**Safari Softwares Domain:**\nhttp://safarisoftwares.co.ke\n\n**Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
         if has_url and has_safari:
-            return "Here are the official Safari Softwares URLs: 🔥✨\n\n**🏢 Safari Softwares Website:**\nhttps://safarisoftwares-code.github.io/safari-softwares/\n\n**🌐 Safari Softwares Domain:**\nhttp://safarisoftwares.co.ke\n\n**🦁 Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
+            return "Here are the official Safari Softwares URLs: 🔥✨\n\n**Safari Softwares Website:**\nhttps://safarisoftwares-code.github.io/safari-softwares/\n\n**Safari Softwares Domain:**\nhttp://safarisoftwares.co.ke\n\n**Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
         return None
 
     def _load_memory(self) -> dict:
@@ -142,7 +151,8 @@ class AIService:
         keywords = [
             "safari softwares", "your work", "your projects", "your company",
             "who made you", "what projects", "what works", "works done",
-            "their works", "what they do", "portfolio", "services", "full list"
+            "their works", "what they do", "portfolio", "services", "full list",
+            "all projects", "list of projects"
         ]
         return any(kw in message.lower() for kw in keywords)
 
