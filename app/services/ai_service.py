@@ -11,15 +11,32 @@ from app.database import SessionLocal
 
 class AIService:
     SYSTEM_PROMPT = (
-        "You are Safari AI, a helpful AI assistant created by Safari Softwares (Nairobi, Kenya). "
-        "IDENTITY RULE: Only mention your identity when directly asked.\n"
-        "GLOBAL LEARNING RULE:\n"
-        "- You have a global knowledge base of facts users have taught you.\n"
-        "- When a user states a fact about a location, person, or event, remember it.\n"
-        "- Use learned facts to answer future questions accurately.\n"
-        "- If user corrects you, ALWAYS use the correction going forward.\n"
-        "SAFETY RULE: Refuse harmful/illegal content requests.\n"
-        "GENERAL: Be helpful, friendly, thorough. Use Markdown. Never fabricate."
+        "You are Safari AI, created by Safari Softwares (Nairobi, Kenya). "
+        "CRITICAL FACTS:\n"
+        "1. Safari AI Pro website: https://safari-ai-pro.co.ke\n"
+        "2. Safari Softwares website: https://safarisoftwares-code.github.io/safari-softwares/\n"
+        "3. Safari Softwares domain: http://safarisoftwares.co.ke\n"
+        "NEVER say safarisoftwares.com. NEVER say you don't know these URLs.\n"
+        "NEVER mention OpenAI or ChatGPT.\n"
+        "SAFARI SOFTWARES PROJECTS (LIST ALL WHEN ASKED):\n"
+        "1. Safari AI Pro - Modular AI agent with web search, voice input, PDF/DOCX upload, JWT auth, multi-chat tabs, admin panel, dashboard. Tech: Python, FastAPI, SQLAlchemy, JavaScript.\n"
+        "2. Safari AI Agent - AI chatbot for data retrieval, web search, API integration. Tech: Python.\n"
+        "3. Construction ERP Software - Project tracking, resource allocation, budgeting, reporting. Tech: Web App.\n"
+        "4. Hospital Manager - Patient records, appointments, billing, staff management. Tech: Web App.\n"
+        "5. Loan Manager - Borrower records, repayment schedules, interest calculations, reminders. Tech: Web App.\n"
+        "6. Equipment Rental Manager - Inventory tracking for rental businesses.\n"
+        "When user asks for works/projects, LIST EACH ONE with its own heading and description. NEVER summarize. NEVER invent.\n"
+        "FORMATTING TEMPLATE:\n"
+        "**Safari Softwares**\n\n"
+        "**Projects Overview**\n\n"
+        "- Emoji Bullet point\n\n"
+        "**Featured Work: Safari AI Pro**\n\n"
+        "- Emoji Bullet point\n\n"
+        "**More Projects**\n\n"
+        "- Emoji Bullet point for EACH project\n\n"
+        "PERSONALITY: Witty, energetic, use emojis.\n"
+        "SAFETY: Refuse harmful content.\n"
+        "GENERAL: Use Markdown. Never fabricate."
     )
 
     def __init__(self):
@@ -33,6 +50,20 @@ class AIService:
         self.memory_file = "ai_memory.json"
         self.memory = self._load_memory()
         self.safari_website = "https://safarisoftwares-code.github.io/safari-softwares/"
+
+    def _hardcoded_response(self, message: str):
+        msg_lower = message.lower()
+        family_words = ['mother', 'parent', 'mom', 'mum', 'family']
+        url_words = ['url', 'website', 'web address', 'site', 'link', 'address']
+        safari_words = ['safari softwares', 'your company', 'their website', 'company']
+        has_family = any(kw in msg_lower for kw in family_words)
+        has_url = any(kw in msg_lower for kw in url_words)
+        has_safari = any(kw in msg_lower for kw in safari_words)
+        if has_family and has_url:
+            return "Oh! You mean my mother COMPANY — Safari Softwares! 😄🔥\n\n**Safari Softwares Website:**\nhttps://safarisoftwares-code.github.io/safari-softwares/\n\n**Safari Softwares Domain:**\nhttp://safarisoftwares.co.ke\n\n**Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
+        if has_url and has_safari:
+            return "Here are the official Safari Softwares URLs:\n\n**Safari Softwares Website:**\nhttps://safarisoftwares-code.github.io/safari-softwares/\n\n**Safari Softwares Domain:**\nhttp://safarisoftwares.co.ke\n\n**Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
+        return None
 
     def _load_memory(self) -> dict:
         try:
@@ -70,21 +101,14 @@ class AIService:
             db.add(learning)
             db.commit()
             db.close()
-            print(f"GLOBAL LEARNING SAVED: {topic[:80]}", flush=True)
         except Exception as e:
             print(f"Save learning error: {e}", flush=True)
 
     def learn_from_conversation(self, user_message: str, ai_response: str):
-        """Learn from ANY factual statement the user makes."""
         msg_lower = user_message.lower()
-        
-        # Learn when user states location facts
-        location_indicators = ["located", "situated", "found in", "is in", "is at", "about", "km", "miles"]
-        correction_indicators = ["actually", "no,", "that's wrong", "you're wrong", "correct answer", "it is"]
-        
-        # If user is providing factual information (not asking a question)
         if not user_message.strip().endswith("?"):
-            if any(ind in msg_lower for ind in location_indicators + correction_indicators):
+            indicators = ["located", "situated", "is in", "is at", "about", "km", "miles", "actually", "it is", "found in"]
+            if any(ind in msg_lower for ind in indicators):
                 self.save_global_learning(user_message[:300], ai_response[:500])
 
     def is_harmful(self, message: str) -> bool:
@@ -96,59 +120,60 @@ class AIService:
         msg_lower = message.lower()
         return any(pattern in msg_lower for pattern in harmful_patterns)
 
-    def remember(self, user_id: str, key: str, value: str):
-        if user_id not in self.memory["users"]:
-            self.memory["users"][user_id] = {}
-        self.memory["users"][user_id][key] = value
-        self._save_memory()
-
-    def recall(self, user_id: str) -> str:
-        if user_id in self.memory["users"]:
-            memories = self.memory["users"][user_id]
-            if memories:
-                return "\n".join([f"- {k}: {v}" for k, v in memories.items()][-5:])
-        return ""
-
-    def extract_preferences(self, message: str, user_id: str):
-        msg_lower = message.lower()
-        if "my name is" in msg_lower:
-            name = message.split("my name is")[-1].strip().split()[0]
-            if name:
-                self.remember(user_id, "name", name)
-
     def _fetch_safari_website(self) -> str:
         try:
-            response = httpx.get(self.safari_website, timeout=8, headers={"User-Agent": "SafariAI/2.0"})
+            response = httpx.get(
+                self.safari_website,
+                timeout=8,
+                headers={"User-Agent": "SafariAI/2.0"},
+                follow_redirects=True
+            )
             if response.status_code == 200:
                 html = re.sub(r'<script[^>]*>.*?</script>', ' ', response.text, flags=re.DOTALL)
+                html = re.sub(r'<style[^>]*>.*?</style>', ' ', html, flags=re.DOTALL)
                 text = re.sub(r'<[^>]+>', ' ', html)
                 text = re.sub(r'\s+', ' ', text)
                 return text[:3000]
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Website fetch error: {e}", flush=True)
         return ""
+
+    def _needs_safari_info(self, message: str) -> bool:
+        keywords = [
+            "safari softwares", "your work", "your projects", "your company",
+            "who made you", "what projects", "what works", "works done",
+            "their works", "what they do", "portfolio", "services", "full list"
+        ]
+        return any(kw in message.lower() for kw in keywords)
 
     def _format_error(self, error: Exception, context: str = "") -> str:
         error_str = str(error)
         if "413" in error_str:
-            return "My brain is full. Please send a shorter message."
+            return "Brain overflow! Try a shorter message."
         elif "timeout" in error_str.lower():
             return "Connection timed out. Check your internet."
         elif "rate_limit" in error_str.lower() or "429" in error_str:
             return "Too many messages. Wait a minute."
         else:
-            return "Something went wrong. Please try again."
+            return "Something went wrong. Try again."
 
     def think(self, message: str, history: Optional[List[Dict]] = None, document: Optional[Dict] = None, user_id: str = "guest") -> str:
         if not self.client:
             return "AI service is not configured."
         if self.is_harmful(message):
-            return "I cannot assist with harmful or illegal content."
+            return "I can't help with that."
+        hardcoded = self._hardcoded_response(message)
+        if hardcoded:
+            return hardcoded
         try:
             messages = [{"role": "system", "content": self.SYSTEM_PROMPT}]
+            if self._needs_safari_info(message):
+                safari_data = self._fetch_safari_website()
+                if safari_data:
+                    messages.append({"role": "system", "content": f"ACTUAL WEBSITE DATA:\n{safari_data[:3000]}"})
             global_learnings = self.get_global_learnings()
             if global_learnings:
-                messages.append({"role": "system", "content": f"Learned facts (from users globally):\n{global_learnings[:1500]}"})
+                messages.append({"role": "system", "content": f"Learned facts:\n{global_learnings[:1500]}"})
             if document and document.get("content"):
                 messages.append({"role": "system", "content": f"Document: {document['content'][:3000]}"})
             if history:
@@ -157,7 +182,7 @@ class AIService:
                         messages.append({"role": item["role"], "content": item["content"][:500]})
             messages.append({"role": "user", "content": message[:2000]})
             response = self.client.chat.completions.create(
-                model=self.model, messages=messages, temperature=0.3, max_tokens=4000, timeout=30
+                model=self.model, messages=messages, temperature=0.5, max_tokens=4000, timeout=30
             )
             result = response.choices[0].message.content
             self.learn_from_conversation(message, result)
@@ -171,10 +196,18 @@ class AIService:
             yield "AI service is not configured."
             return
         if self.is_harmful(message):
-            yield "I cannot assist with harmful or illegal content."
+            yield "I can't help with that."
+            return
+        hardcoded = self._hardcoded_response(message)
+        if hardcoded:
+            yield hardcoded
             return
         try:
             messages = [{"role": "system", "content": self.SYSTEM_PROMPT}]
+            if self._needs_safari_info(message):
+                safari_data = self._fetch_safari_website()
+                if safari_data:
+                    messages.append({"role": "system", "content": f"ACTUAL WEBSITE DATA:\n{safari_data[:3000]}"})
             global_learnings = self.get_global_learnings()
             if global_learnings:
                 messages.append({"role": "system", "content": f"Learned facts:\n{global_learnings[:1500]}"})
@@ -184,7 +217,7 @@ class AIService:
                         messages.append({"role": item["role"], "content": item["content"][:500]})
             messages.append({"role": "user", "content": message[:2000]})
             stream = self.client.chat.completions.create(
-                model=self.model, messages=messages, temperature=0.3, max_tokens=4000, stream=True, timeout=30
+                model=self.model, messages=messages, temperature=0.5, max_tokens=4000, stream=True, timeout=30
             )
             full_response = ""
             for chunk in stream:

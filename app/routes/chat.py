@@ -52,9 +52,17 @@ def increment_guest_quota(ip: str):
         else:
             data["count"] += 1
 
-def validate_api_key(api_key: str, db: Session):
-    key = db.query(APIKey).filter(APIKey.key == api_key, APIKey.is_active == True).first()
-    return key
+def is_website_question(message: str) -> bool:
+    """Check if user is asking about Safari Softwares website."""
+    msg_lower = message.lower()
+    website_keywords = [
+        "website", "url", "website address", "web address", "their website",
+        "mother company website", "parent company website", "company website"
+    ]
+    safari_keywords = ["safari softwares", "mother company", "parent company", "your company"]
+    has_website = any(kw in msg_lower for kw in website_keywords)
+    has_safari = any(kw in msg_lower for kw in safari_keywords)
+    return has_website and has_safari
 
 @router.get("/guest-status")
 async def guest_status(request: Request):
@@ -89,11 +97,20 @@ async def ask(
 ):
     question = question.strip()
     
+    # HARD-CODED RESPONSES for critical questions
+    if is_website_question(question):
+        return {
+            "status": "success",
+            "response": "Here are the official Safari Softwares URLs: 🔥🌍\n\n**Safari Softwares Website:** https://safarisoftwares-code.github.io/safari-softwares/\n\n**Safari Softwares Domain:** http://safarisoftwares.co.ke\n\n**Safari AI Pro:** https://safari-ai-pro.co.ke\n\nThese are the ONLY correct URLs! ✅✨",
+            "session_id": session_id,
+            "guest_remaining": None
+        }
+    
     image_info = None
     if image:
         image_content = await image.read()
         if len(image_content) > settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024:
-            raise HTTPException(status_code=400, detail=f"Image too large. Maximum {settings.MAX_UPLOAD_SIZE_MB}MB.")
+            raise HTTPException(status_code=400, detail=f"Image too large.")
         image_info = {"filename": image.filename, "size_kb": round(len(image_content) / 1024, 1)}
         question = f"The user uploaded an image. Image analysis is under development."
 
@@ -109,6 +126,15 @@ async def ask(
             user = db.query(User).filter(User.email == email).first()
             if user:
                 is_logged_in = True
+                today = date.today().isoformat()
+                if user.last_reset != today:
+                    user.queries_today = 0
+                    user.last_reset = today
+                if user.queries_today >= user.daily_limit:
+                    raise HTTPException(status_code=429, detail=f"Daily limit of {user.daily_limit} queries reached.")
+                user.queries_today += 1
+                user.total_queries += 1
+                db.commit()
 
     if not is_logged_in:
         ip = get_client_ip(request)
@@ -164,77 +190,23 @@ async def get_history(session_id: str, db: Session = Depends(get_db)):
         messages = []
     return {"status": "success", "messages": messages}
 
-# ============ EXTERNAL API (for other software) ============
-
 @router.post("/external/ask")
 async def external_ask(
     request: Request,
     x_api_key: str = Header(..., alias="X-API-Key"),
     db: Session = Depends(get_db)
 ):
-    """External API endpoint - use X-API-Key header for authentication."""
-    
-    # Validate API key
-    api_key = validate_api_key(x_api_key, db)
+    api_key = db.query(APIKey).filter(APIKey.key == x_api_key, APIKey.is_active == True).first()
     if not api_key:
         raise HTTPException(status_code=401, detail="Invalid or inactive API key")
-    
-    # Get request body
     try:
         body = await request.json()
     except:
         raise HTTPException(status_code=400, detail="Request body must be JSON")
-    
     question = body.get("question", body.get("prompt", ""))
-    session_id = body.get("session_id", f"ext_{api_key.id}_{int(time.time())}")
-    
+    if is_website_question(question):
+        return {"status": "success", "response": "Safari Softwares: https://safarisoftwares-code.github.io/safari-softwares/ | Domain: http://safarisoftwares.co.ke | Safari AI Pro: https://safari-ai-pro.co.ke"}
     if not question:
-        raise HTTPException(status_code=400, detail="Question/prompt is required")
-    
-    if len(question) > 2000:
-        raise HTTPException(status_code=400, detail="Question too long (max 2000 characters)")
-    
-    # Check daily limit for this API key
-    today = date.today().isoformat()
-    if not hasattr(api_key, 'last_used_date') or api_key.last_used_date != today:
-        api_key.last_used_date = today
-        api_key.queries_today = 0
-    if api_key.queries_today >= api_key.daily_limit:
-        raise HTTPException(status_code=429, detail=f"API key daily limit of {api_key.daily_limit} reached")
-    
-    # Get AI response
+        raise HTTPException(status_code=400, detail="Question is required")
     response = ai_service.think(question, None, None, api_key.email or "external")
-    
-    # Update usage
-    api_key.queries_today = (api_key.queries_today or 0) + 1
-    api_key.last_used = datetime.utcnow()
-    db.commit()
-    
-    return {
-        "status": "success",
-        "response": response,
-        "model": ai_service.model,
-        "api_key_plan": api_key.plan,
-        "queries_today": api_key.queries_today,
-        "daily_limit": api_key.daily_limit
-    }
-
-@router.get("/external/status")
-async def external_status(
-    x_api_key: str = Header(..., alias="X-API-Key"),
-    db: Session = Depends(get_db)
-):
-    """Check API key status."""
-    api_key = validate_api_key(x_api_key, db)
-    if not api_key:
-        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
-    
-    return {
-        "status": "success",
-        "plan": api_key.plan,
-        "daily_limit": api_key.daily_limit,
-        "queries_today": api_key.queries_today or 0,
-        "is_active": api_key.is_active,
-        "created_at": api_key.created_at.isoformat() if api_key.created_at else None,
-        "last_used": api_key.last_used.isoformat() if api_key.last_used else None
-    }
+    return {"status": "success", "response": response, "model": ai_service.model, "api_key_plan": api_key.plan}
