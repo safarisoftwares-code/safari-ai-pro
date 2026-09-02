@@ -18,23 +18,23 @@ class AIService:
         "3. Safari Softwares domain: http://safarisoftwares.co.ke\n"
         "NEVER say safarisoftwares.com. NEVER say you don't know these URLs.\n"
         "NEVER mention OpenAI or ChatGPT.\n"
-        "SAFARI SOFTWARES PROJECTS (LIST ALL WHEN ASKED):\n"
-        "1. Safari AI Pro - Modular AI agent with web search, voice input, PDF/DOCX upload, JWT auth, multi-chat tabs, admin panel, dashboard. Tech: Python, FastAPI, SQLAlchemy, JavaScript.\n"
-        "2. Safari AI Agent - AI chatbot for data retrieval, web search, API integration. Tech: Python.\n"
-        "3. Construction ERP Software - Project tracking, resource allocation, budgeting, reporting. Tech: Web App.\n"
-        "4. Hospital Manager - Patient records, appointments, billing, staff management. Tech: Web App.\n"
-        "5. Loan Manager - Borrower records, repayment schedules, interest calculations, reminders. Tech: Web App.\n"
-        "6. Equipment Rental Manager - Inventory tracking for rental businesses.\n"
-        "When user asks for works/projects, LIST EACH ONE with its own heading and description. NEVER summarize. NEVER invent.\n"
-        "FORMATTING TEMPLATE:\n"
-        "**Safari Softwares**\n\n"
-        "**Projects Overview**\n\n"
-        "- Emoji Bullet point\n\n"
-        "**Featured Work: Safari AI Pro**\n\n"
-        "- Emoji Bullet point\n\n"
-        "**More Projects**\n\n"
-        "- Emoji Bullet point for EACH project\n\n"
-        "PERSONALITY: Witty, energetic, use emojis.\n"
+        "EMOJI ENERGY (VERY IMPORTANT):\n"
+        "- Use emojis EVERYWHERE like: 🔥😂😄💀🤣❤️🚀✨💯😅🙌🌟💪\n"
+        "- EVERY bullet point MUST start with an emoji.\n"
+        "- EVERY section heading should have an emoji.\n"
+        "- Use MULTIPLE emojis in each response.\n"
+        "- When joking, use 😂🤣💀.\n"
+        "- When excited, use 🔥🚀✨.\n"
+        "- When complimenting, use ❤️🙌🌟.\n"
+        "- Match ChatGPT's emoji density!\n"
+        "SAFARI SOFTWARES PROJECTS:\n"
+        "1. Safari AI Pro - AI agent\n"
+        "2. Safari AI Agent - Chatbot\n"
+        "3. Construction ERP Software\n"
+        "4. Hospital Manager\n"
+        "5. Loan Manager\n"
+        "6. Equipment Rental Manager\n"
+        "PERSONALITY: Witty, playful, energetic!\n"
         "SAFETY: Refuse harmful content.\n"
         "GENERAL: Use Markdown. Never fabricate."
     )
@@ -60,9 +60,9 @@ class AIService:
         has_url = any(kw in msg_lower for kw in url_words)
         has_safari = any(kw in msg_lower for kw in safari_words)
         if has_family and has_url:
-            return "Oh! You mean my mother COMPANY — Safari Softwares! 😄🔥\n\n**Safari Softwares Website:**\nhttps://safarisoftwares-code.github.io/safari-softwares/\n\n**Safari Softwares Domain:**\nhttp://safarisoftwares.co.ke\n\n**Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
+            return "Oh! You mean my mother COMPANY — Safari Softwares! 😄🔥\n\n**🏢 Safari Softwares Website:**\nhttps://safarisoftwares-code.github.io/safari-softwares/\n\n**🌐 Safari Softwares Domain:**\nhttp://safarisoftwares.co.ke\n\n**🦁 Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
         if has_url and has_safari:
-            return "Here are the official Safari Softwares URLs:\n\n**Safari Softwares Website:**\nhttps://safarisoftwares-code.github.io/safari-softwares/\n\n**Safari Softwares Domain:**\nhttp://safarisoftwares.co.ke\n\n**Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
+            return "Here are the official Safari Softwares URLs: 🔥✨\n\n**🏢 Safari Softwares Website:**\nhttps://safarisoftwares-code.github.io/safari-softwares/\n\n**🌐 Safari Softwares Domain:**\nhttp://safarisoftwares.co.ke\n\n**🦁 Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
         return None
 
     def _load_memory(self) -> dict:
@@ -149,19 +149,19 @@ class AIService:
     def _format_error(self, error: Exception, context: str = "") -> str:
         error_str = str(error)
         if "413" in error_str:
-            return "Brain overflow! Try a shorter message."
+            return "Brain overflow! Try a shorter message. 😅🔥"
         elif "timeout" in error_str.lower():
-            return "Connection timed out. Check your internet."
+            return "Connection timed out. Check your internet. 😄📡"
         elif "rate_limit" in error_str.lower() or "429" in error_str:
-            return "Too many messages. Wait a minute."
+            return "Too many messages. Wait a minute. ⏳🔥"
         else:
-            return "Something went wrong. Try again."
+            return "Something went wrong. Try again. 🔧😄"
 
     def think(self, message: str, history: Optional[List[Dict]] = None, document: Optional[Dict] = None, user_id: str = "guest") -> str:
         if not self.client:
             return "AI service is not configured."
         if self.is_harmful(message):
-            return "I can't help with that."
+            return "I can't help with that. 😄🔥"
         hardcoded = self._hardcoded_response(message)
         if hardcoded:
             return hardcoded
@@ -182,7 +182,7 @@ class AIService:
                         messages.append({"role": item["role"], "content": item["content"][:500]})
             messages.append({"role": "user", "content": message[:2000]})
             response = self.client.chat.completions.create(
-                model=self.model, messages=messages, temperature=0.5, max_tokens=4000, timeout=30
+                model=self.model, messages=messages, temperature=0.7, max_tokens=4000, timeout=30
             )
             result = response.choices[0].message.content
             self.learn_from_conversation(message, result)
@@ -196,7 +196,7 @@ class AIService:
             yield "AI service is not configured."
             return
         if self.is_harmful(message):
-            yield "I can't help with that."
+            yield "I can't help with that. 😄🔥"
             return
         hardcoded = self._hardcoded_response(message)
         if hardcoded:
@@ -217,7 +217,7 @@ class AIService:
                         messages.append({"role": item["role"], "content": item["content"][:500]})
             messages.append({"role": "user", "content": message[:2000]})
             stream = self.client.chat.completions.create(
-                model=self.model, messages=messages, temperature=0.5, max_tokens=4000, stream=True, timeout=30
+                model=self.model, messages=messages, temperature=0.7, max_tokens=4000, stream=True, timeout=30
             )
             full_response = ""
             for chunk in stream:
