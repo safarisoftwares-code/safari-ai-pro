@@ -1,6 +1,7 @@
-.env
+﻿.env
 __pycache__/
 *.pyc
 *.db
 safari_pro.db
 reset_tokens.json
+ai_memory.json
