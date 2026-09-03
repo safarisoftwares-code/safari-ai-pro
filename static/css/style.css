@@ -31,7 +31,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;min-height:100vh;displ
 .s{background:#fff;border:2px solid #d2691e;border-bottom-left-radius:6px}
 .markdown-body h1,.markdown-body h2,.markdown-body h3{color:#8b4513;margin:12px 0 6px;font-size:17px;font-weight:bold}
 .markdown-body h1:first-child{font-size:19px;font-weight:bold;color:#8b4513}
-.markdown-body p{margin:6px 0}
+.markdown-body p{margin:12px 0 12px 0;line-height:1.8}
 .markdown-body strong{color:#8b4513;font-weight:bold}
 .markdown-body br{margin:2px 0}
 .doc-btn-group{display:flex;flex-direction:row;gap:6px;flex-wrap:wrap;margin-top:10px}
