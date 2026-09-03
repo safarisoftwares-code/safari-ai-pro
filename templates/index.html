@@ -6,7 +6,6 @@
 <title>Safari AI Pro - Explore Beyond Limits</title>
 <link rel="stylesheet" href="/static/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 <div class="c">
@@ -21,29 +20,43 @@
 <button id="logoutBtn" onclick="logoutUser()" style="display:none;">Logout</button>
 </div>
 </div>
+
+<div class="action-row">
+<button class="action-btn" onclick="newChat()" title="New Chat">+ New Chat</button>
+<button class="action-btn action-danger" onclick="if(confirm('Delete ALL chat history?')){clearAllChats();}" title="Clear All Chats">&#128465; Clear All</button>
+<button class="action-btn" onclick="toggleSearch()" title="Search">&#x1F50D; Search</button>
+</div>
+
 <div class="search-bar" id="searchBar" style="display:none;">
 <input type="text" id="searchInput" placeholder="Search in chat history..." oninput="searchChats(this.value)">
-<button onclick="closeSearch()" style="background:none;border:none;cursor:pointer;font-size:18px;color:#888;">&times;</button>
+<button onclick="closeSearch()">&times;</button>
 </div>
-<div class="search-results" id="searchResults" style="display:none;"></div>
+<div class="search-results" id="searchResults"></div>
+
+<div class="main-row">
+<div class="sidebar">
 <div class="tabs-container">
 <div class="tabs" id="tabs"></div>
-<button class="search-btn" onclick="toggleSearch()" title="Search">&#x1F50D;</button>
-<button class="export-btn" onclick="showExportMenu()" title="Export">&#x1F4E5;</button>
 </div>
+</div>
+<div class="chat-area">
 <div id="b"></div>
+</div>
+</div>
+
 <div class="typing-indicator" id="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
-<div class="i">
+
+<div class="single-bar">
 <label for="fileInput" class="attach-btn" title="Attach document">&#128206;</label>
-<label for="imageInput" class="attach-btn" title="Attach image" style="background:#e8f5e9;">&#128247;</label>
-<button class="attach-btn" id="micBtn" title="Voice input" onclick="startRecording()" style="background:#e8f5e9;">&#127908;</button>
-<div class="file-preview" id="filePreview" style="display:none;">&#128206; <span id="fileName">file.txt</span><button type="button" class="clear-attach-btn" onclick="clearAttachment()">x</button></div>
-<div class="file-preview" id="imagePreview" style="display:none;background:#e8f5e9;">&#128247; <span id="imageName">image.jpg</span><button type="button" class="clear-attach-btn" onclick="clearAttachment()">x</button></div>
+<label for="imageInput" class="attach-btn" title="Attach image">&#128247;</label>
+<button class="attach-btn" id="micBtn" onclick="startRecording()">&#127908;</button>
+<div class="file-preview" id="filePreview" style="display:none;">&#128206; <span id="fileName">file.txt</span><button onclick="clearAttachment()">x</button></div>
 <input type="file" id="fileInput" accept=".txt,.md,.csv,.json,.py,.log,.pdf,.docx" style="display:none;" onchange="selectFile(this)">
 <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="selectImage(this)">
 <input id="q" placeholder="Type your question or attach a file..." autofocus onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();ask()}">
 <button id="askBtn" onclick="ask()">Ask</button>
 </div>
+
 <div class="f">2026 Safari Softwares | <a href="/terms">Terms</a> | <a href="/privacy">Privacy</a> | <a href="/pricing">Pricing</a> | <a href="/admin">Admin</a> | <a href="/dashboard">Dashboard</a></div>
 </div>
 <div class="toast" id="toast"></div>
