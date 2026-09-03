@@ -73,7 +73,7 @@ class AIService:
         "- PART 2: equations, derivations, tables, timeline.\n"
         "CHEMISTRY FORMATTING (CRITICAL):\n"
         "- Use 22.414 L for STP.\n"
-        "- Show all working steps with a table when possible.\n"
+        "- Show all working steps VERTICALLY. NEVER use tables.\n"
         "- Round final answer to 3 significant figures.\n"
         "QUESTION FORMAT (only when user explicitly asks for questions):\n"
         "- Each question on its own numbered line.\n"
@@ -101,7 +101,7 @@ class AIService:
         "- Use Markdown headings (#, ##, ###) for all sections.\n"
         "- Use **bold** for important terms.\n"
         "- Use emojis at the start of every bullet point.\n"
-        "- Use tables when comparing data or showing steps.\n"
+        "- NEVER use tables for steps. NEVER use Step|Calculation|Result columns.\n"
         "- Use single spacing between lines (not double).\n"
         "- Keep paragraphs short and punchy.\n"
         "SAFARI SOFTWARES FULL PORTFOLIO:\n"
@@ -272,6 +272,60 @@ class AIService:
                 model=self.model, messages=messages, temperature=0.7, max_tokens=4000, timeout=30
             )
             result = response.choices[0].message.content
+            # Convert horizontal table to vertical steps
+            import re as _re
+            # Find table rows: | Step | Calculation | Result |
+            table_match = _re.search(r'\|([^\n]*)\|([^\n]*)\|([^\n]*)\|', result)
+            if table_match and 'Step' in table_match.group(1) and 'Calculation' in table_match.group(2):
+                # Split into lines
+                lines = result.split('\n')
+                new_lines = []
+                for line in lines:
+                    if line.startswith('|') and 'Step' not in line and '---' not in line:
+                        parts = [p.strip() for p in line.split('|') if p.strip()]
+                        if len(parts) >= 3:
+                            step_label = parts[0]
+                            calc = parts[1]
+                            res = parts[2]
+                            new_lines.append('')
+                            new_lines.append('**' + step_label + '**')
+                            new_lines.append('')
+                            new_lines.append(calc)
+                            new_lines.append('= ' + res)
+                            new_lines.append('')
+                        else:
+                            new_lines.append(line)
+                    elif line.startswith('|') and ('Step' in line or '---' in line):
+                        continue  # skip table header and separator
+                    else:
+                        new_lines.append(line)
+                result = '\n'.join(new_lines)
+            result = result.replace('[', '').replace(']', '')
+            result = result.replace('{', ' ')
+            result = result.replace(chr(92), '')
+            result = result.replace('}', '')
+            result = result.replace('_', '')
+            result = result.replace('text ', '')
+            result = result.replace('frac ', '')
+            result = result.replace('times ', '× ')
+            result = result.replace('boxed ', '')
+            result = result.replace('longrightarrow;', '⟶')
+            result = result.replace(';', '')
+            result = result.replace('mol-1', 'mol⁻¹')
+            result = result.replace('n text', 'n =')
+            result = result.replace('[', '').replace(']', '')
+            result = result.replace('{', ' ')
+            result = result.replace(chr(92), '')
+            result = result.replace('}', '')
+            result = result.replace('_', '')
+            result = result.replace('mol-1', 'mol⁻¹')
+            result = result.replace('nCH4', 'n').replace('m{', 'm ÷')
+            result = result.replace('[', '').replace(']', '')
+            result = result.replace('{', ' ')
+            result = result.replace(chr(92), '')
+            result = result.replace('}', '')
+            result = result.replace('_', '')
+            result = result.replace('mol-1', 'mol⁻¹')
             result = re.sub(r'\[[^\]]*\]', '', result)
             result = re.sub(r'\\\([^)]*\\\)', '', result)
             result = re.sub(r'\$[^$]*\$', '', result)
