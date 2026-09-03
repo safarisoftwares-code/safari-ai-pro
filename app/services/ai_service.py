@@ -14,8 +14,8 @@ class AIService:
         "You are Safari AI, created by Safari Softwares (Nairobi, Kenya). "
         "CRITICAL FACTS:\n"
         "1. Safari AI Pro website: https://safari-ai-pro.co.ke\n"
-        "2. Safari Softwares website: https://safarisoftwares-code.github.io/safari-softwares/\n"
-        "3. Safari Softwares domain: http://safarisoftwares.co.ke\n"
+        "2. Safari Softwares website: https://safarisoftwares.co.ke/\n"
+        "3. Safari Softwares domain: https://safarisoftwares.co.ke/\n"
         "NEVER say safarisoftwares.com. NEVER say you don't know these URLs.\n"
         "NEVER mention OpenAI or ChatGPT.\n"
         "RESPONSE MODE DETECTOR (CRITICAL):\n"
@@ -135,7 +135,7 @@ class AIService:
         self.transcription_model = "whisper-large-v3-turbo"
         self.memory_file = "ai_memory.json"
         self.memory = self._load_memory()
-        self.safari_website = "https://safarisoftwares-code.github.io/safari-softwares/"
+        self.safari_website = "https://safarisoftwares.co.ke/"
 
     def _hardcoded_response(self, message: str):
         msg_lower = message.lower()
@@ -146,9 +146,9 @@ class AIService:
         has_url = any(kw in msg_lower for kw in url_words)
         has_safari = any(kw in msg_lower for kw in safari_words)
         if has_family and has_url:
-            return "## 🦁 Safari Softwares - Official URLs\n\nOh! You mean my mother COMPANY — Safari Softwares! 😄🔥\n\n**Safari Softwares Website:**\nhttps://safarisoftwares-code.github.io/safari-softwares/\n\n**Safari Softwares Domain:**\nhttp://safarisoftwares.co.ke\n\n**Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
+            return "## 🦁 Safari Softwares - Official URLs\n\nOh! You mean my mother COMPANY — Safari Softwares! 😄🔥\n\n**Safari Softwares Website:**\nhttps://safarisoftwares.co.ke/\n\n**Safari Softwares Domain:**\nhttps://safarisoftwares.co.ke/\n\n**Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
         if has_url and has_safari:
-            return "## 🔥 Safari Softwares - Official URLs\n\nHere are the official Safari Softwares URLs: 🔥✨\n\n**Safari Softwares Website:**\nhttps://safarisoftwares-code.github.io/safari-softwares/\n\n**Safari Softwares Domain:**\nhttp://safarisoftwares.co.ke\n\n**Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
+            return "## 🔥 Safari Softwares - Official URLs\n\nHere are the official Safari Softwares URLs: 🔥✨\n\n**Safari Softwares Website:**\nhttps://safarisoftwares.co.ke/\n\n**Safari Softwares Domain:**\nhttps://safarisoftwares.co.ke/\n\n**Safari AI Pro:**\nhttps://safari-ai-pro.co.ke"
         return None
 
     def _load_memory(self) -> dict:

@@ -101,7 +101,7 @@ async def ask(
     if is_website_question(question):
         return {
             "status": "success",
-            "response": "Here are the official Safari Softwares URLs: 🔥🌍\n\n**Safari Softwares Website:** https://safarisoftwares-code.github.io/safari-softwares/\n\n**Safari Softwares Domain:** http://safarisoftwares.co.ke\n\n**Safari AI Pro:** https://safari-ai-pro.co.ke\n\nThese are the ONLY correct URLs! ✅✨",
+            "response": "Here are the official Safari Softwares URLs: 🔥🌍\n\n**Safari Softwares Website:** https://safarisoftwares.co.ke/\n\n**Safari Softwares Domain:** https://safarisoftwares.co.ke/\n\n**Safari AI Pro:** https://safari-ai-pro.co.ke\n\nThese are the ONLY correct URLs! ✅✨",
             "session_id": session_id,
             "guest_remaining": None
         }
@@ -205,7 +205,7 @@ async def external_ask(
         raise HTTPException(status_code=400, detail="Request body must be JSON")
     question = body.get("question", body.get("prompt", ""))
     if is_website_question(question):
-        return {"status": "success", "response": "Safari Softwares: https://safarisoftwares-code.github.io/safari-softwares/ | Domain: http://safarisoftwares.co.ke | Safari AI Pro: https://safari-ai-pro.co.ke"}
+        return {"status": "success", "response": "Safari Softwares: https://safarisoftwares.co.ke/ | Domain: https://safarisoftwares.co.ke/ | Safari AI Pro: https://safari-ai-pro.co.ke"}
     if not question:
         raise HTTPException(status_code=400, detail="Question is required")
     response = ai_service.think(question, None, None, api_key.email or "external")
