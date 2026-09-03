@@ -24,6 +24,23 @@ class AIService:
         "- If user pastes a question: ALWAYS solve it immediately. NEVER echo it back as a question.\n"
         "- Default: If unsure, ALWAYS solve the problem.\n"
         "- NEVER ask the user to type 'ANSWER' to get the solution.\n"
+        "PERIODIC TABLE ATOMIC MASSES (MEMORIZE EXACTLY - USE THESE VALUES):\n"
+        "- H = 1.008, He = 4.003, Li = 6.941, Be = 9.012, B = 10.811, C = 12.011.\n"
+        "- N = 14.007, O = 15.999, F = 18.998, Ne = 20.180, Na = 22.990 (SODIUM).\n"
+        "- Mg = 24.305, Al = 26.982, Si = 28.086, P = 30.974, S = 32.065.\n"
+        "- Cl = 35.453, K = 39.098, Ca = 40.078 (CALCIUM), Fe = 55.845, Cu = 63.546.\n"
+        "- Zn = 65.380, Br = 79.904, Ag = 107.868, I = 126.904, Ba = 137.327, Pb = 207.200.\n"
+        "- NEVER confuse Na (SODIUM = 22.990) with Ca (CALCIUM = 40.078).\n"
+        "MOLAR MASS CALCULATION RULES (CRITICAL):\n"
+        "- ALWAYS show the calculation: M = (n₁ × Ar₁) + (n₂ × Ar₂) + ...\n"
+        "- ALWAYS use the EXACT atomic masses from the periodic table above.\n"
+        "- NEVER round intermediate values. Only round the FINAL answer.\n"
+        "- Examples:\n"
+        "  Na₂CO₃ = (2 × 22.990) + (1 × 12.011) + (3 × 15.999) = 45.980 + 12.011 + 47.997 = 105.988 g/mol.\n"
+        "  NaCl = (1 × 22.990) + (1 × 35.453) = 58.443 g/mol.\n"
+        "  CaCO₃ = (1 × 40.078) + (1 × 12.011) + (3 × 15.999) = 40.078 + 12.011 + 47.997 = 100.086 g/mol.\n"
+        "  H₂O = (2 × 1.008) + (1 × 15.999) = 18.015 g/mol.\n"
+        "  CO₂ = (1 × 12.011) + (2 × 15.999) = 44.009 g/mol.\n"
         "CHEMISTRY VALIDATION (CRITICAL):\n"
         "- CaCO3 + HCl produces CO2, NOT H2.\n"
         "- Acid + Carbonate = CO2 + Water + Salt.\n"
@@ -36,15 +53,23 @@ class AIService:
         "- Use arrow: → or ⟶ (not ->).\n"
         "- Use equilibrium arrow: ⇌ for reversible reactions.\n"
         "- Use multiplication dot: · (not x or *).\n"
+        "- Use division slash: / or ÷ (not \\dfrac or \\frac).\n"
         "- Use minus sign: − (not -).\n"
-        "- Example: CaCO₃(s) + 2HCl(aq) → CaCl₂(aq) + CO₂(g) + H₂O(l)\n"
         "- NEVER write CaCO3 or CO2 or H2O. ALWAYS use subscripts.\n"
-        "- NEVER use LaTeX. NEVER use [ ... ] or \( ... \) or $ ... $.\n"
-        "- Write equations inline as plain Unicode text.\n"
+        "NO LATEX - ABSOLUTE RULE (CRITICAL):\n"
+        "- NEVER use LaTeX. NEVER. NOT EVEN ONCE.\n"
+        "- NEVER use [ ... ] brackets with \\text, \\frac, \\dfrac, \\times, \\cdot inside.\n"
+        "- NEVER use \\( ... \\) or $ ... $ or \\[ ... \\] notation.\n"
+        "- NEVER write n_{something} or m_{something} or \\text{...}.\n"
+        "- Write ALL math as PLAIN TEXT with Unicode symbols.\n"
+        "- Example CORRECT: 25.0 g ÷ 105.988 g mol⁻¹ = 0.236 mol\n"
+        "- Example CORRECT: 0.472 mol × 58.443 g mol⁻¹ = 27.585 g\n"
+        "- Example WRONG: [ n_{Na₂CO₃} = \\frac{25.0}{105.988} = 0.236 ]\n"
+        "- If you write LaTeX, users will think the system has a virus. NEVER DO IT.\n"
         "CHEMISTRY FORMATTING (CRITICAL):\n"
         "- Use 22.414 L for STP.\n"
-        "- Molar mass values: Ca=40.08, C=12.01, O=16.00, H=1.008, Cl=35.45, Na=22.99.\n"
         "- Show all working steps with a table when possible.\n"
+        "- Round final answer to 3 significant figures.\n"
         "QUESTION FORMAT (only when user explicitly asks for questions):\n"
         "- Each question on its own numbered line.\n"
         "- Use emojis at start of each question.\n"
@@ -242,6 +267,29 @@ class AIService:
                 model=self.model, messages=messages, temperature=0.7, max_tokens=4000, timeout=30
             )
             result = response.choices[0].message.content
+            result = re.sub(r'\[[^\]]*\]', '', result)
+            result = re.sub(r'\\\([^)]*\\\)', '', result)
+            result = re.sub(r'\$[^$]*\$', '', result)
+            result = result.replace('\\text{', '').replace('\\frac{', '').replace('\\dfrac{', '')
+            result = result.replace('\\times', '×').replace('\\cdot', '·')
+            result = result.replace('\\rightarrow', '→').replace('\\longrightarrow', '⟶')
+            result = result.replace('\\leftarrow', '←').replace('\\leftrightarrow', '↔')
+            result = result.replace('\\rightleftharpoons', '⇌')
+            result = result.replace('\\infty', '∞').replace('\\approx', '≈')
+            result = result.replace('\\leq', '≤').replace('\\geq', '≥')
+            result = result.replace('\\neq', '≠').replace('\\pm', '±')
+            result = result.replace('\\alpha', 'α').replace('\\beta', 'β').replace('\\gamma', 'γ')
+            result = result.replace('\\delta', 'δ').replace('\\lambda', 'λ').replace('\\mu', 'μ')
+            result = result.replace('\\pi', 'π').replace('\\theta', 'θ').replace('\\psi', 'ψ').replace('\\phi', 'φ')
+            result = result.replace('\\hbar', 'ℏ').replace('\\Delta', 'Δ').replace('\\sum', 'Σ').replace('\\int', '∫')
+            result = result.replace('\\sqrt', '√').replace('\\partial', '∂').replace('\\nabla', '∇').replace('\\propto', '∝')
+            result = result.replace('\\langle', '⟨').replace('\\rangle', '⟩')
+            result = result.replace('\\boxed', '').replace('\\mathrm', '').replace('\\mathbf', '')
+            result = result.replace('\\left', '').replace('\\right', '')
+            result = result.replace('\\overline', '').replace('\\underline', '')
+            result = result.replace('_{', '').replace('^{', '').replace('}', '')
+            result = result.replace('\\;', ' ').replace('\\,', ' ')
+            result = re.sub(r'\\[a-zA-Z]+', '', result)
             self.learn_from_conversation(message, result)
             return result
         except Exception as e:
