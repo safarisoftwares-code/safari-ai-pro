@@ -1,4 +1,4 @@
-﻿*{margin:0;padding:0;box-sizing:border-box}
+*{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:10px}
 .c{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.2);width:100%;max-width:1100px;height:95vh;display:flex;flex-direction:column;overflow:hidden}
 
@@ -12,6 +12,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;min-height:100vh;displ
 
 /* ACTION ROW */
 .action-row{display:flex;justify-content:flex-end;gap:6px;padding:6px 10px;background:#fff;border-bottom:1px solid #f0e0d0;flex-shrink:0}
+.chat-history-label{margin-right:auto;font-size:14px;font-weight:bold;color:#fff;background:#8b4513;padding:5px 15px;border-radius:20px;display:inline-block;line-height:1.2;align-self:center}
 .action-btn{background:#d2691e;color:#fff;border:none;padding:5px 12px;border-radius:15px;cursor:pointer;font-size:11px;font-weight:bold;white-space:nowrap}
 .action-danger{background:#d32f2f}
 
