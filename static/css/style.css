@@ -25,8 +25,8 @@ body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;min-height:100vh;displ
 .tabs{display:flex;flex-direction:column;padding:4px}
 .tab{padding:8px 10px;background:#f5e6d3;border:1px solid #e0c8a8;border-radius:8px;margin:2px 0;cursor:pointer;font-size:11px;display:flex;align-items:center;gap:4px}
 .tab.active{background:#fff;border:2px solid #d2691e;font-weight:bold;color:#8b4513}
-.tab .del{width:16px;height:16px;background:#e0a0a0;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;cursor:pointer;margin-left:auto}
-.tab .rename-btn{width:16px;height:16px;background:#999;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;cursor:pointer;margin-left:3px}
+.tab .del{width:22px;height:22px;background:#d32f2f;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;margin-left:auto;font-weight:bold}
+.tab .rename-btn{width:22px;height:22px;background:#999;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;margin-left:3px;font-weight:bold}
 
 /* CHAT AREA */
 .chat-area{display:flex;flex-direction:column;flex:1;min-width:0}
