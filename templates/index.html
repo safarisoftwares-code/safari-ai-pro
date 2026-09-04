@@ -61,6 +61,32 @@
 
 <div class="f">© 2026 Safari Softwares. All Rights Reserved. | <a href="/terms">Terms</a> | <a href="/privacy">Privacy</a> | <a href="/pricing">Pricing</a> | <a href="/admin">Admin</a> | <a href="/dashboard">Dashboard</a></div>
 </div>
+<button class="feedback-btn" onclick="openFeedback()">💬 Feedback</button>
+<div class="feedback-modal" id="feedbackModal">
+<div class="feedback-content">
+<h3>💬 Send Feedback</h3>
+<p class="feedback-subtitle">Help us improve Safari AI Pro!</p>
+<div class="star-rating" id="starRating">
+<span onclick="setRating(1)">⭐</span>
+<span onclick="setRating(2)">⭐</span>
+<span onclick="setRating(3)">⭐</span>
+<span onclick="setRating(4)">⭐</span>
+<span onclick="setRating(5)">⭐</span>
+</div>
+<input type="text" id="fbName" placeholder="Your name">
+<input type="email" id="fbEmail" placeholder="Your email">
+<select id="fbCategory">
+<option value="general">General Feedback</option>
+<option value="bug">Bug Report</option>
+<option value="feature">Feature Request</option>
+<option value="improvement">Improvement Suggestion</option>
+<option value="other">Other</option>
+</select>
+<textarea id="fbMessage" placeholder="Your feedback..." rows="4"></textarea>
+<button class="fb-submit" onclick="submitFeedback()">Submit Feedback</button>
+<button class="fb-cancel" onclick="closeFeedback()">Cancel</button>
+</div>
+</div>
 <div class="toast" id="toast"></div>
 <script src="/static/js/chat.js"></script>
 </body>

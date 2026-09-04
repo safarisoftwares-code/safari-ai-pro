@@ -232,3 +232,61 @@ window.toggleSidebar=function(){
         sidebar.classList.toggle('show');
     }
 };
+
+
+// FEEDBACK FUNCTIONS
+let feedbackRating = 5;
+
+function openFeedback(){
+    document.getElementById('feedbackModal').classList.add('show');
+    var name = localStorage.getItem('safari_name');
+    if(name) document.getElementById('fbName').value = name;
+}
+
+function closeFeedback(){
+    document.getElementById('feedbackModal').classList.remove('show');
+}
+
+function setRating(r){
+    feedbackRating = r;
+    var stars = document.querySelectorAll('#starRating span');
+    stars.forEach(function(s, i){
+        if(i < r) s.classList.add('active');
+        else s.classList.remove('active');
+    });
+}
+
+async function submitFeedback(){
+    var name = document.getElementById('fbName').value.trim();
+    var email = document.getElementById('fbEmail').value.trim();
+    var category = document.getElementById('fbCategory').value;
+    var message = document.getElementById('fbMessage').value.trim();
+    
+    if(!name || !message){
+        showToast('Please fill name and feedback message.');
+        return;
+    }
+    
+    var fd = new FormData();
+    fd.append('name', name);
+    fd.append('email', email || 'anonymous@user.com');
+    fd.append('rating', feedbackRating);
+    fd.append('category', category);
+    fd.append('message', message);
+    
+    try{
+        var r = await fetch('/api/v1/feedback/submit', {method:'POST', body:fd});
+        var d = await r.json();
+        if(d.status === 'success'){
+            showToast('Feedback sent! Thank you! 🦁');
+            closeFeedback();
+            document.getElementById('fbMessage').value = '';
+            document.getElementById('fbEmail').value = '';
+            setRating(5);
+        } else {
+            showToast(d.detail || 'Could not send feedback.');
+        }
+    } catch(e){
+        showToast('Error sending feedback.');
+    }
+}
