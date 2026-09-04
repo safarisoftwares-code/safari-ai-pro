@@ -109,7 +109,13 @@ button[type=submit]{background:#d2691e;color:#fff;border:0;padding:14px;border-r
         stars = "★" * f.rating
         read_status = "Read" if f.is_read else "New"
         read_color = "#2e7d32" if f.is_read else "#d32f2f"
-        feedback_rows += f"<tr><td>{f.name}</td><td>{f.email}</td><td>{stars}</td><td>{f.category}</td><td>{f.message[:100]}</td><td>{f.created_at.strftime('%Y-%m-%d %H:%M') if f.created_at else 'N/A'}</td><td style='color:{read_color}'>{read_status}</td></tr>"
+        reply_status = "Replied" if f.reply else read_status
+        reply_color = "#1565c0" if f.reply else read_color
+        action_btn = "<button onclick=" + chr(39) + "openReply(" + str(f.id) + ")" + chr(39) + " style=" + chr(39) + "background:#1565c0;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:11px" + chr(39) + ">Reply</button>" if not f.reply else "<button style=" + chr(39) + "background:#2e7d32;color:#fff;border:none;padding:5px 10px;border-radius:5px;font-size:11px" + chr(39) + ">Replied</button>"
+        user_type = "User" if f.user_id else "Guest"
+        user_color = "#2e7d32" if f.user_id else "#ff9800"
+        action_btn = "<button onclick=" + chr(39) + "openReply(" + str(f.id) + ")" + chr(39) + " style=" + chr(39) + "background:#1565c0;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:11px" + chr(39) + ">Reply</button>" if f.user_id and not f.reply else ("<button style=" + chr(39) + "background:#2e7d32;color:#fff;border:none;padding:5px 10px;border-radius:5px;font-size:11px" + chr(39) + ">Replied</button>" if f.reply else "<span style=" + chr(39) + "color:#999;font-size:11px" + chr(39) + ">Guest</span>")
+        feedback_rows += f"<tr><td>{f.name}</td><td>{f.email}</td><td>{stars}</td><td>{f.category}</td><td>{f.message[:80]}</td><td>{f.created_at.strftime('%Y-%m-%d %H:%M') if f.created_at else 'N/A'}</td><td style='color:{user_color}'>{user_type}</td><td style='color:{reply_color}'>{reply_status}</td><td>{action_btn}</td></tr>"
     
     api_rows = ""
     for k in api_keys:
@@ -204,13 +210,23 @@ code{{background:#f0e0d0;padding:3px 8px;border-radius:4px;font-size:12px}}
 <h2>User Feedback</h2>
 <div class="table-wrapper">
 <table>
-<tr><th>Name</th><th>Email</th><th>Rating</th><th>Category</th><th>Message</th><th>Date</th><th>Status</th></tr>
+<tr><th>Name</th><th>Email</th><th>Rating</th><th>Category</th><th>Message</th><th>Date</th><th>Type</th><th>Status</th><th>Action</th></tr>
 {feedback_rows}
 </table>
 </div>
 
 <a href="/">Back to Chat</a>
 </div>
+<div id="replyModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;justify-content:center;align-items:center;padding:20px">
+<div style="background:#fff;border-radius:15px;padding:25px;width:100%;max-width:500px">
+<h3 style="color:#8b4513;margin-bottom:10px">Reply to Feedback</h3>
+<input type="hidden" id="replyFeedbackId">
+<textarea id="replyMessage" placeholder="Type your reply..." rows="5" style="width:100%;padding:10px;border:2px solid #e0c8a8;border-radius:8px;font-size:13px;outline:0;margin-bottom:10px;box-sizing:border-box"></textarea>
+<button onclick="sendReply()" style="width:100%;padding:12px;background:#d2691e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;margin-bottom:8px">Send Reply</button>
+<button onclick="closeReply()" style="width:100%;padding:10px;background:#f0e0d0;color:#8b4513;border:none;border-radius:8px;cursor:pointer;font-weight:bold">Cancel</button>
+</div>
+</div>
+<script src="/static/js/admin.js"></script>
 <script>
 function copyKey(elementId) {{
     var key = document.getElementById(elementId).innerText;

@@ -12,7 +12,10 @@ class Feedback(Base):
     category = Column(String(50), default="general")
     message = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    user_id = Column(Integer, nullable=True)
     is_read = Column(Integer, default=0)
+    reply = Column(Text, nullable=True)
+    replied_at = Column(DateTime, nullable=True)
     
     def to_dict(self):
         return {
@@ -23,5 +26,7 @@ class Feedback(Base):
             "category": self.category,
             "message": self.message,
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "is_read": self.is_read
+            "is_read": self.is_read,
+            "reply": self.reply,
+            "replied_at": self.replied_at.isoformat() if self.replied_at else None
         }

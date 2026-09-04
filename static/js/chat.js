@@ -273,6 +273,8 @@ async function submitFeedback(){
     fd.append('rating', feedbackRating);
     fd.append('category', category);
     fd.append('message', message);
+    var token = localStorage.getItem('safari_token');
+    if(token) fd.append('token', token);
     
     try{
         var r = await fetch('/api/v1/feedback/submit', {method:'POST', body:fd});

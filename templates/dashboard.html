@@ -96,6 +96,11 @@ body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;min-height:100vh;paddi
 <div id="planDetails">Loading...</div>
 </div>
 
+<div class="info-section">
+<h3>My Feedback</h3>
+<div id="myFeedback">Loading your feedback...</div>
+</div>
+
 <div class="actions">
 <a href="/" class="btn btn-primary">← Back to Chat</a>
 <button class="btn btn-secondary" onclick="logoutUser()">Logout</button>
@@ -163,7 +168,48 @@ async function loadDashboard(){
         }else{window.location.href='/login';}
     }catch(e){console.error(e);}
 }
-document.addEventListener('DOMContentLoaded',loadDashboard);
+async function loadMyFeedback(){
+    var token = localStorage.getItem('safari_token');
+    if(!token) return;
+    try{
+        var r = await fetch('/api/v1/feedback/my-feedback?token='+encodeURIComponent(token));
+        var d = await r.json();
+        if(d.status === 'success'){
+            var container = document.getElementById('myFeedback');
+            if(d.feedbacks.length === 0){
+                container.innerHTML = '<p style="color:#999;font-size:12px">No feedback submitted yet.</p>';
+            } else {
+                var html = '';
+                d.feedbacks.forEach(function(f){
+                    var stars = '★'.repeat(f.rating);
+                    html += '<div style="background:#fff;border:1px solid #e0c8a8;border-radius:10px;padding:12px;margin-bottom:10px">';
+                    html += '<div style="display:flex;justify-content:space-between;margin-bottom:6px">';
+                    html += '<span style="color:#d2691e;font-weight:bold">'+stars+'</span>';
+                    html += '<span style="color:#888;font-size:11px">'+new Date(f.created_at).toLocaleDateString()+'</span>';
+                    html += '</div>';
+                    html += '<p style="font-size:12px;color:#555;margin-bottom:6px"><strong>'+f.category+':</strong> '+f.message+'</p>';
+                    if(f.reply){
+                        html += '<div style="background:#e8f5e9;border-left:3px solid #2e7d32;padding:10px;border-radius:0 8px 8px 0;margin-top:8px">';
+                        html += '<p style="font-size:11px;color:#2e7d32;font-weight:bold">Admin Reply:</p>';
+                        html += '<p style="font-size:12px;color:#333">'+f.reply+'</p>';
+                        html += '</div>';
+                    } else {
+                        html += '<p style="font-size:11px;color:#ff9800;margin-top:6px">Awaiting admin response...</p>';
+                    }
+                    html += '</div>';
+                });
+                container.innerHTML = html;
+            }
+        }
+    } catch(e){
+        console.error('Feedback load error:', e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+    loadDashboard();
+    loadMyFeedback();
+});
 </script>
 </body>
 </html>
