@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -6,106 +6,104 @@
 <title>Dashboard - Safari AI Pro</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;padding:20px;min-height:100vh;display:flex;justify-content:center;align-items:center}
-.c{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.15);padding:35px;width:100%;max-width:800px}
-h1{color:#8b4513;font-size:26px;margin-bottom:5px}
-.subtitle{color:#888;margin-bottom:25px;font-size:14px}
-.header-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:20px}
-.user-badge{display:flex;align-items:center;gap:10px}
-.avatar{width:50px;height:50px;background:#d2691e;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:bold}
-.user-info h3{color:#333;font-size:16px}
-.user-info p{color:#888;font-size:12px}
-.plan-tag{display:inline-block;padding:4px 12px;border-radius:15px;font-size:11px;font-weight:bold;letter-spacing:1px}
-.plan-free{background:#e8f5e9;color:#2e7d32}
-.plan-pro{background:#e3f2fd;color:#1565c0}
-.plan-enterprise{background:#fce4ec;color:#c62828}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}
-.stat-card{background:#faf5f0;padding:18px;border-radius:12px;text-align:center;border:1px solid #e0c8a8}
-.stat-card h4{color:#d2691e;font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px}
-.stat-card .num{color:#8b4513;font-size:26px;font-weight:bold}
-.usage-section{margin:20px 0}
-.usage-header{display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px}
-.usage-header span:first-child{color:#555;font-weight:600}
-.usage-header span:last-child{color:#888}
-.usage-bar{width:100%;height:12px;background:#e0c8a8;border-radius:6px;overflow:hidden}
-.usage-fill{height:100%;background:linear-gradient(90deg,#d2691e,#8b4513);border-radius:6px;transition:width .5s}
-.usage-text{text-align:center;margin-top:8px;font-size:12px;color:#888}
-.info-section{margin:20px 0}
-.info-section h3{color:#8b4513;font-size:15px;margin-bottom:12px;border-bottom:2px solid #f0e0d0;padding-bottom:6px}
-.info-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5e6d3;font-size:13px}
+body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;min-height:100vh;padding:15px}
+.c{max-width:700px;margin:0 auto;background:#fff;border-radius:20px;box-shadow:0 15px 40px rgba(0,0,0,.12);overflow:hidden}
+
+/* HEADER CARD */
+.dash-header{background:linear-gradient(135deg,#d2691e,#8b4513);color:#fff;padding:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.dash-header .user-info h2{font-size:18px;margin-bottom:2px}
+.dash-header .user-info p{font-size:11px;opacity:.9}
+.plan-tag{display:inline-block;padding:5px 14px;border-radius:20px;font-size:10px;font-weight:bold;letter-spacing:1px;background:rgba(255,255,255,.2);color:#fff}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:15px}
+.stat-card{background:#faf5f0;border:1px solid #e0c8a8;border-radius:12px;padding:14px;text-align:center}
+.stat-card .icon{font-size:22px;margin-bottom:4px}
+.stat-card .num{color:#8b4513;font-size:22px;font-weight:bold}
+.stat-card .label{color:#888;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+/* USAGE BAR */
+.usage-section{padding:0 15px 15px}
+.usage-header{display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px;color:#555}
+.usage-bar{height:14px;background:#f0e0d0;border-radius:7px;overflow:hidden}
+.usage-fill{height:100%;background:linear-gradient(90deg,#ff9800,#d2691e);border-radius:7px;transition:width .6s ease}
+.usage-text{text-align:center;font-size:11px;color:#888;margin-top:6px}
+
+/* INFO SECTIONS */
+.info-section{margin:0 15px 15px;background:#faf5f0;border-radius:12px;padding:12px;border:1px solid #e0c8a8}
+.info-section h3{color:#8b4513;font-size:13px;margin-bottom:8px}
+.info-row{display:flex;justify-content:space-between;padding:6px 0;font-size:12px;border-bottom:1px solid #f0e0d0}
+.info-row:last-child{border-bottom:none}
 .info-row span:first-child{color:#888}
 .info-row span:last-child{color:#333;font-weight:600}
-.actions{display:flex;gap:10px;margin-top:25px;flex-wrap:wrap}
-.btn{flex:1;padding:12px 20px;border-radius:10px;text-align:center;text-decoration:none;font-weight:bold;font-size:14px;cursor:pointer;border:none;min-width:150px}
+
+/* ACTIONS */
+.actions{display:flex;gap:8px;padding:0 15px 15px;flex-wrap:wrap}
+.btn{flex:1;padding:11px;border-radius:10px;text-align:center;text-decoration:none;font-weight:bold;font-size:12px;cursor:pointer;border:none;min-width:120px;transition:all .3s}
 .btn-primary{background:#d2691e;color:#fff}
-.btn-primary:hover{background:#8b4513}
+.btn-primary:active{transform:scale(.97)}
 .btn-secondary{background:#f0e0d0;color:#8b4513}
-.btn-secondary:hover{background:#e0c8a8}
-.btn-danger{background:#ffebee;color:#d32f2f}
-.btn-danger:hover{background:#ffcdd2}
-.danger-zone{margin-top:25px;padding:15px;border:2px dashed #ff6b6b;border-radius:12px;background:#fff5f5}
-.danger-zone h4{color:#d32f2f;font-size:14px;margin-bottom:10px}
-.danger-zone p{font-size:12px;color:#888;margin-bottom:10px}
-.refresh-note{text-align:center;font-size:11px;color:#999;margin-top:15px}
-@media(max-width:600px){
-.stats-grid{grid-template-columns:repeat(2,1fr)}
+.btn-secondary:active{transform:scale(.97)}
+.btn-danger{background:#ffebee;color:#d32f2f;border:1px solid #ffcdd2}
+.btn-danger:active{transform:scale(.97)}
+
+/* DESKTOP */
+@media(min-width:768px){
+    body{padding:40px}
+    .dash-header{padding:30px}
+    .dash-header .user-info h2{font-size:24px}
+    .dash-header .user-info p{font-size:13px}
+    .stats-grid{grid-template-columns:repeat(4,1fr);gap:15px;padding:25px}
+    .stat-card{padding:20px}
+    .stat-card .num{font-size:30px}
+    .stat-card .label{font-size:11px}
+    .info-section{margin:0 25px 20px;padding:18px}
+    .actions{padding:0 25px 25px}
+    .btn{font-size:14px;padding:14px}
 }
 </style>
 </head>
 <body>
 <div class="c">
-<div class="header-row">
-<div class="user-badge">
-<div class="avatar" id="avatarLetter">U</div>
+<div class="dash-header">
 <div class="user-info">
-<h3 id="userName">Loading...</h3>
+<h2 id="userName">Loading...</h2>
 <p id="userEmail">...</p>
 </div>
+<span class="plan-tag" id="planTag">FREE</span>
 </div>
-<span class="plan-tag plan-free" id="planTag">FREE</span>
-</div>
-
-<h1>Dashboard</h1>
-<p class="subtitle">Your Safari AI Pro account overview</p>
 
 <div class="stats-grid">
-<div class="stat-card"><h4>Queries Today</h4><div class="num" id="queriesToday">-</div></div>
-<div class="stat-card"><h4>Daily Limit</h4><div class="num" id="dailyLimit">-</div></div>
-<div class="stat-card"><h4>Total Queries</h4><div class="num" id="totalQueries">-</div></div>
-<div class="stat-card"><h4>Remaining</h4><div class="num" id="remaining">-</div></div>
+<div class="stat-card"><div class="icon">📊</div><div class="num" id="queriesToday">-</div><div class="label">Today</div></div>
+<div class="stat-card"><div class="icon">🎯</div><div class="num" id="dailyLimit">-</div><div class="label">Limit</div></div>
+<div class="stat-card"><div class="icon">🔥</div><div class="num" id="totalQueries">-</div><div class="label">Total</div></div>
+<div class="stat-card"><div class="icon">⚡</div><div class="num" id="remaining">-</div><div class="label">Left</div></div>
 </div>
 
 <div class="usage-section">
-<div class="usage-header">
-<span>Usage Today</span>
-<span id="usageFraction">0 / 0</span>
-</div>
+<div class="usage-header"><span>Usage Today</span><span id="usageFraction">0 / 0</span></div>
 <div class="usage-bar"><div class="usage-fill" id="usageFill" style="width:0%"></div></div>
 <p class="usage-text" id="usageText">Loading...</p>
 </div>
 
 <div class="info-section">
-<h3>Account Information</h3>
+<h3>👤 Account Information</h3>
 <div id="accountInfo">Loading...</div>
 </div>
 
 <div class="info-section">
-<h3>Plan Details</h3>
+<h3>💎 Plan Details</h3>
 <div id="planDetails">Loading...</div>
 </div>
 
 <div class="actions">
-<a href="/" class="btn btn-primary">Back to Chat</a>
+<a href="/" class="btn btn-primary">← Back to Chat</a>
 <button class="btn btn-secondary" onclick="logoutUser()">Logout</button>
 </div>
 
-<div class="danger-zone">
-<h4>Danger Zone</h4>
-<p>Deleting your data is permanent and cannot be undone.</p>
-<button class="btn btn-danger" onclick="deleteAccount()">Delete My Data</button>
+<div class="actions">
+<button class="btn btn-danger" onclick="deleteAccount()">🗑 Delete My Data</button>
 </div>
-
-<p class="refresh-note">Data refreshes automatically on page load</p>
 </div>
 
 <script>
@@ -116,81 +114,55 @@ function logoutUser(){
 }
 
 async function deleteAccount(){
-    if(!confirm('Are you sure you want to delete ALL your data? This cannot be undone.')) return;
-    if(!confirm('Final confirmation: Delete all your chat history and account data?')) return;
-    
+    if(!confirm('Delete ALL your data? This cannot be undone.')) return;
     var token=localStorage.getItem('safari_token');
     if(!token){window.location.href='/login';return;}
-    
     try{
         var fd=new FormData();
         fd.append('token',token);
         var r=await fetch('/api/v1/auth/delete',{method:'POST',body:fd});
         var d=await r.json();
         if(d.status==='success'){
-            localStorage.removeItem('safari_token');
-            localStorage.removeItem('safari_name');
-            alert('Your data has been deleted.');
+            localStorage.clear();
             window.location.href='/';
         }else{
-            alert(d.message||'Could not delete data.');
+            alert(d.message||'Could not delete.');
         }
-    }catch(e){
-        alert('Error deleting data.');
-    }
+    }catch(e){alert('Error.');}
 }
 
 async function loadDashboard(){
     var token=localStorage.getItem('safari_token');
     if(!token){window.location.href='/login';return;}
-    
     try{
         var r=await fetch('/api/v1/auth/me?token='+encodeURIComponent(token));
         var d=await r.json();
-        
         if(d.status==='success'){
             var user=d.user;
-            
-            document.getElementById('avatarLetter').textContent=user.name.charAt(0).toUpperCase();
             document.getElementById('userName').textContent=user.name;
             document.getElementById('userEmail').textContent=user.email;
-            
             var planTag=document.getElementById('planTag');
             planTag.textContent=user.plan.toUpperCase();
-            planTag.className='plan-tag plan-'+user.plan;
-            
             document.getElementById('queriesToday').textContent=user.queries_today;
             document.getElementById('dailyLimit').textContent=user.daily_limit;
             document.getElementById('totalQueries').textContent=user.total_queries;
-            
             var remaining=Math.max(0,user.daily_limit-user.queries_today);
             document.getElementById('remaining').textContent=remaining;
-            
             var pct=user.daily_limit>0?Math.min(100,(user.queries_today/user.daily_limit)*100):0;
             document.getElementById('usageFill').style.width=pct+'%';
             document.getElementById('usageFraction').textContent=user.queries_today+' / '+user.daily_limit;
             document.getElementById('usageText').textContent=Math.round(pct)+'% of daily limit used';
-            
             document.getElementById('accountInfo').innerHTML=
                 '<div class="info-row"><span>Name</span><span>'+user.name+'</span></div>'+
                 '<div class="info-row"><span>Email</span><span>'+user.email+'</span></div>'+
-                '<div class="info-row"><span>Member Since</span><span>'+(user.created_at||'N/A')+'</span></div>'+
                 '<div class="info-row"><span>Status</span><span>'+(user.is_banned?'Banned':'Active')+'</span></div>';
-            
             document.getElementById('planDetails').innerHTML=
                 '<div class="info-row"><span>Plan</span><span>'+user.plan.toUpperCase()+'</span></div>'+
                 '<div class="info-row"><span>Daily Limit</span><span>'+user.daily_limit+' queries</span></div>'+
-                '<div class="info-row"><span>Queries Today</span><span>'+user.queries_today+'</span></div>'+
-                '<div class="info-row"><span>Total Queries</span><span>'+user.total_queries+'</span></div>'+
-                '<div class="info-row"><span>Remaining Today</span><span>'+remaining+'</span></div>';
-        }else{
-            window.location.href='/login';
-        }
-    }catch(e){
-        console.error('Dashboard error:',e);
-    }
+                '<div class="info-row"><span>Remaining</span><span>'+remaining+'</span></div>';
+        }else{window.location.href='/login';}
+    }catch(e){console.error(e);}
 }
-
 document.addEventListener('DOMContentLoaded',loadDashboard);
 </script>
 </body>

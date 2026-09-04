@@ -141,7 +141,7 @@ tr:hover{{background:#faf5f0}}
 h2{{color:#8b4513;font-size:16px;margin-top:20px}}
 a{{color:#d2691e;text-decoration:none}}
 code{{background:#f0e0d0;padding:3px 8px;border-radius:4px;font-size:12px}}
-@media(max-width:600px){{.c{{padding:15px}}.stat-card{{min-width:45%}}}}
+@media(max-width:600px){{.c{{padding:10px}}.stat-card{{min-width:45%;padding:10px}}.stat-card h3{{font-size:9px}}.stat-card .num{{font-size:18px}}h1{{font-size:18px}}.header-row{{flex-direction:column;align-items:flex-start}}.form-row{{flex-direction:column}}.form-row input,.form-row select{{width:100%}}.form-row button{{width:100%}}.table-wrapper{{margin:8px 0}}table{{font-size:11px;min-width:600px}}th,td{{padding:6px}}h2{{font-size:14px}}.btn-logout{{padding:6px 10px;font-size:11px}}code{{font-size:10px;padding:2px 5px}}}}
 </style>
 </head>
 <body>

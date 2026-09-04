@@ -114,3 +114,30 @@ body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;min-height:100vh;displ
     .h-right a{display:none}
     .h-right button{display:none}
 }
+
+
+/* LOGIN PAGE */
+.login-body{display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f5e6d3;padding:20px}
+.login-container{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.2);width:100%;max-width:420px;padding:35px 30px;text-align:center}
+.login-container h1{color:#8b4513;font-size:22px;margin-bottom:4px}
+.login-container p{color:#888;font-size:13px;margin-bottom:20px}
+.tab-row{display:flex;background:#faf5f0;border-radius:25px;padding:4px;margin-bottom:20px;border:1px solid #e0c8a8}
+.tab-btn{flex:1;padding:10px;text-align:center;border-radius:20px;cursor:pointer;font-size:13px;font-weight:bold;color:#888;border:none;background:none;transition:all .3s}
+.tab-btn.active{background:#d2691e;color:#fff}
+.login-container label{display:block;font-size:12px;color:#555;margin-bottom:5px;font-weight:600;text-align:left}
+.login-container input{width:100%;padding:12px 14px;border:2px solid #e0c8a8;border-radius:10px;font-size:14px;outline:0;margin-bottom:15px;transition:border .3s;box-sizing:border-box}
+.login-container input:focus{border-color:#d2691e}
+.login-container input::placeholder{color:#bbb}
+.login-container button[type=submit]{width:100%;padding:14px;background:#d2691e;color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:bold;font-size:15px;transition:background .3s}
+.login-container button[type=submit]:hover{background:#8b4513}
+.forgot-link{display:block;text-align:center;margin-top:12px;color:#d2691e;text-decoration:none;font-size:12px;font-weight:600;cursor:pointer}
+.forgot-link:hover{text-decoration:underline}
+.back{display:block;text-align:center;margin-top:15px;color:#888;text-decoration:none;font-size:12px}
+.back:hover{color:#d2691e}
+.msg{padding:10px;border-radius:8px;font-size:12px;margin-top:15px;display:none;text-align:center}
+.msg.success{display:block;background:#e8f5e9;color:#2e7d32}
+.msg.error{display:block;background:#ffebee;color:#d32f2f}
+@media(max-width:400px){
+    .login-container{padding:25px 20px}
+    .login-container h1{font-size:20px}
+}
