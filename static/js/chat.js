@@ -224,3 +224,11 @@ function selectImage(input){var file=input.files[0];if(!file)return;if(file.size
 function clearAttachment(){pendingFile=null;pendingImage=null;var input=document.getElementById('fileInput');if(input)input.value='';var imgInput=document.getElementById('imageInput');if(imgInput)imgInput.value='';document.getElementById('filePreview').style.display='none';var imgPreview=document.getElementById('imagePreview');if(imgPreview)imgPreview.style.display='none';showToast('Attachment removed.');}
 document.addEventListener('keydown',function(e){if(e.ctrlKey&&e.key==='f'){e.preventDefault();toggleSearch();}});
 document.addEventListener('DOMContentLoaded',function(){fetchGuestStatus();loadChats();var chatIds=Object.keys(chats);var existingEmpty=null;for(var i=0;i<chatIds.length;i++){var c=chats[chatIds[i]];if(!c.messages||c.messages.length===0){existingEmpty=chatIds[i];break;}}if(existingEmpty){activeChat=existingEmpty;}else{activeChat='chat_'+Date.now();chats[activeChat]={name:'New Chat',messages:[],timestamps:[]};saveChats();}renderTabs();renderMessages();});
+
+
+window.toggleSidebar=function(){
+    var sidebar=document.querySelector('.sidebar');
+    if(sidebar){
+        sidebar.classList.toggle('show');
+    }
+};
