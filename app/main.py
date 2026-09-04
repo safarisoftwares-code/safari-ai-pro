@@ -94,6 +94,8 @@ button[type=submit]{background:#d2691e;color:#fff;border:0;padding:14px;border-r
     
     users = db.query(User).all()
     api_keys = db.query(APIKey).all()
+    from app.models import Feedback
+    feedbacks = db.query(Feedback).order_by(Feedback.created_at.desc()).limit(20).all()
     
     user_rows = ""
     for u in users:
@@ -101,6 +103,13 @@ button[type=submit]{background:#d2691e;color:#fff;border:0;padding:14px;border-r
         status_color = "red" if u.is_banned else "green"
         action = f'<a href="/admin/ban?email={u.email}&pw={pw}" style="color:red">Ban</a>' if not u.is_banned else f'<a href="/admin/unban?email={u.email}&pw={pw}" style="color:green">Unban</a>'
         user_rows += f"<tr><td>{u.name}</td><td>{u.email}</td><td>{u.plan}</td><td>{u.queries_today}/{u.daily_limit}</td><td>{u.total_queries}</td><td style='color:{status_color}'>{status}</td><td>{action}</td></tr>"
+    
+    feedback_rows = ""
+    for f in feedbacks:
+        stars = "★" * f.rating
+        read_status = "Read" if f.is_read else "New"
+        read_color = "#2e7d32" if f.is_read else "#d32f2f"
+        feedback_rows += f"<tr><td>{f.name}</td><td>{f.email}</td><td>{stars}</td><td>{f.category}</td><td>{f.message[:100]}</td><td>{f.created_at.strftime('%Y-%m-%d %H:%M') if f.created_at else 'N/A'}</td><td style='color:{read_color}'>{read_status}</td></tr>"
     
     api_rows = ""
     for k in api_keys:
@@ -189,6 +198,14 @@ code{{background:#f0e0d0;padding:3px 8px;border-radius:4px;font-size:12px}}
 <table>
 <tr><th>Email</th><th>Plan</th><th>Usage</th><th>Total</th><th>API Key</th><th>Action</th></tr>
 {api_rows}
+</table>
+</div>
+
+<h2>User Feedback</h2>
+<div class="table-wrapper">
+<table>
+<tr><th>Name</th><th>Email</th><th>Rating</th><th>Category</th><th>Message</th><th>Date</th><th>Status</th></tr>
+{feedback_rows}
 </table>
 </div>
 
