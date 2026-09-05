@@ -112,7 +112,16 @@ async def ask(
         if len(image_content) > settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024:
             raise HTTPException(status_code=400, detail=f"Image too large.")
         image_info = {"filename": image.filename, "size_kb": round(len(image_content) / 1024, 1)}
-        question = f"The user uploaded an image. Respond immediately that image generation and analysis is coming soon. Ask user to describe what they need. User question: {question}"
+        # If image is actually a PDF, extract text
+        if image.filename and image.filename.lower().endswith('.pdf'):
+            from app.services.file_service import FileService
+            pdf_text = FileService.extract_text(image.filename, image_content)
+            if pdf_text:
+                question = f"The user uploaded a PDF file. Content:\n\n{pdf_text[:3000]}\n\nUser question: {question}"
+            else:
+                question = f"The user uploaded a PDF but text could not be extracted. User question: {question}"
+        else:
+            question = f"The user uploaded an image. Respond immediately that image generation and analysis is coming soon. Ask user to describe what they need. User question: {question}"
     if not question and not image_info:
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
