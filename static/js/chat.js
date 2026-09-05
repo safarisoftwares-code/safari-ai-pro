@@ -292,3 +292,15 @@ async function submitFeedback(){
         showToast('Error sending feedback.');
     }
 }
+
+
+// Close sidebar when clicking outside
+document.addEventListener('click', function(e){
+    var sidebar = document.querySelector('.sidebar');
+    var hamburger = document.querySelector('.hamburger-btn');
+    if(sidebar && sidebar.classList.contains('show')){
+        if(!sidebar.contains(e.target) && !hamburger.contains(e.target)){
+            sidebar.classList.remove('show');
+        }
+    }
+});

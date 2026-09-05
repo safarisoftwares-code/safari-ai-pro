@@ -161,3 +161,10 @@ body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;min-height:100vh;displ
 .fb-submit:hover{background:#8b4513}
 .fb-cancel{width:100%;padding:10px;background:#f0e0d0;color:#8b4513;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px}
 .fb-cancel:hover{background:#e0c8a8}
+
+
+/* CHAT HISTORY TITLE IN SIDEBAR */
+.chat-history-title{display:none;padding:12px 15px;font-size:14px;font-weight:bold;color:#fff;background:linear-gradient(135deg,#d2691e,#8b4513);text-align:left;flex-shrink:0}
+@media(max-width:600px){
+    .chat-history-title{display:block}
+}
