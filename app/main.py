@@ -49,6 +49,10 @@ async def dashboard_page():
 async def profile_page():
     return FileResponse("templates/profile.html")
 
+@app.get("/about", response_class=HTMLResponse)
+async def about_page():
+    return FileResponse("templates/about.html")
+
 @app.get("/terms", response_class=HTMLResponse)
 async def terms_page():
     return FileResponse("templates/terms.html")
