@@ -1,4 +1,4 @@
-let chats={};
+﻿let chats={};
 let activeChat=null;
 let isProcessing=false;
 let pendingFile=null;
@@ -45,11 +45,8 @@ function addImageButtons(container){
         img.parentNode.insertBefore(wrapper, img);
         wrapper.appendChild(img);
         
-        // Create pixel dots overlay
         var overlay = document.createElement('div');
         overlay.className = 'img-loading-overlay';
-        
-        // Add 30 dots
         for(var i = 0; i < 30; i++){
             var dot = document.createElement('div');
             dot.className = 'pixel-dot';
@@ -57,19 +54,13 @@ function addImageButtons(container){
         }
         wrapper.appendChild(overlay);
         
-        // Remove overlay when image loads
-        img.onload = function(){overlay.style.display='none';overlay.innerHTML='';var b=document.getElementById('b');if(b)b.scrollTop=b.scrollHeight;var b=document.getElementById('b');if(b)b.scrollTop=b.scrollHeight;var b=document.getElementById(chr(39)+chr(98)+chr(39));if(b)b.scrollTop=b.scrollHeight;
-            overlay.style.display = 'none';
-        };
-        if(img.complete){overlay.style.display='none';overlay.innerHTML='';
-            overlay.style.display = 'none';
-        }
+        img.onload = function(){overlay.style.display = 'none';var b=document.getElementById('b');if(b)b.scrollTop=b.scrollHeight;};
+        if(img.complete){overlay.style.display = 'none';}
         
-        // Download arrow button
         var downloadBtn = document.createElement('button');
         downloadBtn.innerHTML = '&#11015;';
         downloadBtn.title = 'Download Image';
-        downloadBtn.style.cssText = 'position:absolute;top:10px;right:10px;background:#d2691e;color:#fff;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:bold;box-shadow:0 2px 10px rgba(0,0,0,.3);z-index:10';
+        downloadBtn.style.cssText = 'position:absolute;top:10px;right:10px;background:#d2691e;color:#fff;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:bold;z-index:10';
         downloadBtn.onclick = async function(){
             try {
                 var response = await fetch(img.src);
@@ -77,37 +68,261 @@ function addImageButtons(container){
                 var url = URL.createObjectURL(blob);
                 var link = document.createElement('a');
                 link.href = url;
-                link.download = 'safari_ai_image_' + Date.now() + '.jpg';
+                link.download = 'safari_ai_pro_' + Date.now() + '.jpg';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                showToast('Image downloaded to Downloads folder!');
-            } catch(e) {
-                window.open(img.src, '_blank');
-                showToast('Opened image in new tab. Long press to save!');
-            }
+                showToast('Image downloaded!');
+            } catch(e) {showToast('Could not download.');}
         };
         
-        // Open button
         var openBtn = document.createElement('button');
-        openBtn.innerHTML = '&#128269;';
-        openBtn.title = 'Open Full Size';
-        openBtn.style.cssText = 'position:absolute;top:10px;left:10px;background:#1565c0;color:#fff;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;font-weight:bold;box-shadow:0 2px 10px rgba(0,0,0,.3);z-index:10';
+        openBtn.innerHTML = '&#9999;&#65039;';
+        openBtn.title = 'Edit Image - Add Text, Rotate, Curve';
+        openBtn.style.cssText = 'position:absolute;top:10px;left:10px;background:#1565c0;color:#fff;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;font-weight:bold;z-index:10';
         openBtn.onclick = function(){
-    var modal = document.createElement('div');
-    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:9999;display:flex;justify-content:center;align-items:center;padding:20px';
-    var fullImg = document.createElement('img');
-    fullImg.src = img.src;
-    fullImg.style.cssText = 'max-width:100%;max-height:85%;border-radius:12px';
-    modal.appendChild(fullImg);
-    var urlBar = document.createElement('div');
-    urlBar.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#d2691e;color:#fff;padding:8px 20px;border-radius:20px;font-size:11px;z-index:10000';
-    urlBar.textContent = 'https://safari-ai-pro.co.ke/generated-image/' + Date.now() + '.jpg';
-    modal.appendChild(urlBar);
-    modal.onclick = function(){modal.remove();};
-    document.body.appendChild(modal);
-};
+            var modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:9999;display:flex;flex-direction:column;align-items:center;padding:15px;overflow-y:auto;box-sizing:border-box';
+            
+            var imgWrap = document.createElement('div');
+            imgWrap.style.cssText = 'position:relative;display:inline-block;max-width:100%;margin-top:10px';
+            
+            var fullImg = document.createElement('img');
+            fullImg.src = img.src;
+            fullImg.style.cssText = 'width:100%;max-width:500px;border-radius:12px;display:block';
+            imgWrap.appendChild(fullImg);
+            
+            var textLayer = document.createElement('div');
+            textLayer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none';
+            imgWrap.appendChild(textLayer);
+            
+            modal.appendChild(imgWrap);
+            
+            var controls = document.createElement('div');
+            controls.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-top:12px;width:100%;max-width:500px';
+            
+            var inputRow = document.createElement('div');
+            inputRow.style.cssText = 'display:flex;gap:6px';
+            var textInput = document.createElement('input');
+            textInput.type = 'text';
+            textInput.placeholder = 'Type text...';
+            textInput.style.cssText = 'flex:1;padding:10px 14px;border-radius:20px;border:2px solid #d2691e;font-size:13px;outline:0;min-width:0';
+            var addBtn = document.createElement('button');
+            addBtn.textContent = 'Add';
+            addBtn.style.cssText = 'padding:10px 14px;background:#d2691e;color:#fff;border:none;border-radius:20px;cursor:pointer;font-weight:bold;font-size:13px';
+            inputRow.appendChild(textInput);
+            inputRow.appendChild(addBtn);
+            controls.appendChild(inputRow);
+            
+            // Size slider
+            var sizeRow = document.createElement('div');
+            sizeRow.style.cssText = 'display:flex;align-items:center;gap:6px';
+            var sizeLabel = document.createElement('span');
+            sizeLabel.textContent = 'Size';
+            sizeLabel.style.cssText = 'color:#fff;font-size:11px;min-width:35px';
+            var sizeInput = document.createElement('input');
+            sizeInput.type = 'range';
+            sizeInput.min = '10'; sizeInput.max = '100'; sizeInput.value = '24';
+            sizeInput.style.cssText = 'flex:1';
+            sizeRow.appendChild(sizeLabel);
+            sizeRow.appendChild(sizeInput);
+            controls.appendChild(sizeRow);
+            
+            // Rotation slider 0-360
+            var rotRow = document.createElement('div');
+            rotRow.style.cssText = 'display:flex;align-items:center;gap:6px';
+            var rotLabel = document.createElement('span');
+            rotLabel.textContent = 'Rotate';
+            rotLabel.style.cssText = 'color:#fff;font-size:11px;min-width:35px';
+            var rotInput = document.createElement('input');
+            rotInput.type = 'range';
+            rotInput.min = '0'; rotInput.max = '360'; rotInput.value = '0';
+            rotInput.style.cssText = 'flex:1';
+            var rotVal = document.createElement('span');
+            rotVal.textContent = '0°';
+            rotVal.style.cssText = 'color:#fff;font-size:11px;min-width:35px;text-align:right';
+            rotRow.appendChild(rotLabel);
+            rotRow.appendChild(rotInput);
+            rotRow.appendChild(rotVal);
+            controls.appendChild(rotRow);
+            
+            // Curve slider
+            var curveRow = document.createElement('div');
+            curveRow.style.cssText = 'display:flex;align-items:center;gap:6px';
+            var curveLabel = document.createElement('span');
+            curveLabel.textContent = 'Curve';
+            curveLabel.style.cssText = 'color:#fff;font-size:11px;min-width:35px';
+            var curveInput = document.createElement('input');
+            curveInput.type = 'range';
+            curveInput.min = '-100'; curveInput.max = '100'; curveInput.value = '0';
+            curveInput.style.cssText = 'flex:1';
+            var curveVal = document.createElement('span');
+            curveVal.textContent = '0';
+            curveVal.style.cssText = 'color:#fff;font-size:11px;min-width:35px;text-align:right';
+            curveRow.appendChild(curveLabel);
+            curveRow.appendChild(curveInput);
+            curveRow.appendChild(curveVal);
+            controls.appendChild(curveRow);
+            
+            // Color
+            var colorRow = document.createElement('div');
+            colorRow.style.cssText = 'display:flex;align-items:center;gap:6px';
+            var colorLabel = document.createElement('span');
+            colorLabel.textContent = 'Color';
+            colorLabel.style.cssText = 'color:#fff;font-size:11px;min-width:35px';
+            var colorPicker = document.createElement('input');
+            colorPicker.type = 'color';
+            colorPicker.value = '#ffffff';
+            colorPicker.style.cssText = 'width:35px;height:30px;border:none;border-radius:5px;cursor:pointer;background:none';
+            colorRow.appendChild(colorLabel);
+            colorRow.appendChild(colorPicker);
+            controls.appendChild(colorRow);
+            
+            modal.appendChild(controls);
+            
+            var selectedText = null;
+            
+            addBtn.onclick = function(){
+                var txt = textInput.value.trim();
+                if(!txt) return;
+                
+                var textEl = document.createElement('div');
+                textEl.textContent = txt;
+                textEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:24px;font-weight:bold;text-shadow:2px 2px 8px rgba(0,0,0,.9);cursor:move;pointer-events:auto;white-space:nowrap;user-select:none;font-family:Arial,sans-serif';
+                textEl.dataset.rotate = '0';
+                textEl.dataset.curve = '0';
+                textLayer.appendChild(textEl);
+                textInput.value = '';
+                
+                textEl.onclick = function(e){
+                    e.stopPropagation();
+                    selectedText = textEl;
+                    sizeInput.value = parseInt(textEl.style.fontSize) || 24;
+                    rotInput.value = textEl.dataset.rotate || 0;
+                    rotVal.textContent = (textEl.dataset.rotate || 0) + '°';
+                    curveInput.value = textEl.dataset.curve || 0;
+                    curveVal.textContent = textEl.dataset.curve || 0;
+                };
+                
+                // Drag
+                var dragging = false, sx, sy, ox, oy;
+                textEl.onmousedown = function(e){
+                    dragging = true; sx = e.clientX; sy = e.clientY;
+                    ox = textEl.offsetLeft; oy = textEl.offsetTop;
+                    e.preventDefault();
+                };
+                document.onmousemove = function(e){
+                    if(dragging){
+                        textEl.style.left = (ox + e.clientX - sx) + 'px';
+                        textEl.style.top = (oy + e.clientY - sy) + 'px';
+                        applyTransform(textEl);
+                    }
+                };
+                document.onmouseup = function(){dragging = false;};
+                
+                textEl.ontouchstart = function(e){
+                    dragging = true; var t = e.touches[0];
+                    sx = t.clientX; sy = t.clientY;
+                    ox = textEl.offsetLeft; oy = textEl.offsetTop;
+                };
+                document.ontouchmove = function(e){
+                    if(dragging){
+                        var t = e.touches[0];
+                        textEl.style.left = (ox + t.clientX - sx) + 'px';
+                        textEl.style.top = (oy + t.clientY - sy) + 'px';
+                        applyTransform(textEl);
+                        e.preventDefault();
+                    }
+                };
+                document.ontouchend = function(){dragging = false;};
+            };
+            
+            function applyTransform(el){
+                var rot = el.dataset.rotate || 0;
+                var curve = el.dataset.curve || 0;
+                var curveCSS = curve != 0 ? ' transform:rotate(' + rot + 'deg) skewX(' + curve + 'deg);' : ' transform:rotate(' + rot + 'deg);';
+                el.style.cssText = el.style.cssText.replace(/transform:[^;]+;/g, '');
+                el.style.transform = 'rotate(' + rot + 'deg)' + (curve != 0 ? ' skewX(' + curve + 'deg)' : '');
+            }
+            
+            sizeInput.oninput = function(){
+                if(selectedText) selectedText.style.fontSize = this.value + 'px';
+            };
+            rotInput.oninput = function(){
+                rotVal.textContent = this.value + '°';
+                if(selectedText){
+                    selectedText.dataset.rotate = this.value;
+                    applyTransform(selectedText);
+                }
+            };
+            curveInput.oninput = function(){
+                curveVal.textContent = this.value;
+                if(selectedText){
+                    selectedText.dataset.curve = this.value;
+                    applyTransform(selectedText);
+                }
+            };
+            colorPicker.oninput = function(){
+                if(selectedText) selectedText.style.color = this.value;
+            };
+            
+            // Download with text
+            var dlBtn = document.createElement('button');
+            dlBtn.textContent = 'Download with Text';
+            dlBtn.style.cssText = 'margin-top:10px;padding:12px 20px;background:#2e7d32;color:#fff;border:none;border-radius:20px;cursor:pointer;font-weight:bold;font-size:14px;width:100%;max-width:500px';
+            dlBtn.onclick = function(){
+                var canvas = document.createElement('canvas');
+                canvas.width = fullImg.naturalWidth || 500;
+                canvas.height = fullImg.naturalHeight || 500;
+                var ctx = canvas.getContext('2d');
+                var tempImg = new Image();
+                tempImg.crossOrigin = 'anonymous';
+                tempImg.src = fullImg.src;
+                tempImg.onload = function(){
+                    ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
+                    var texts = textLayer.querySelectorAll('div');
+                    texts.forEach(function(t){
+                        var ratioX = canvas.width / fullImg.width;
+                        var ratioY = canvas.height / fullImg.height;
+                        var x = (t.offsetLeft + t.offsetWidth/2) * ratioX;
+                        var y = (t.offsetTop + t.offsetHeight/2) * ratioY;
+                        var fontSize = parseInt(t.style.fontSize) * ratioX;
+                        var rotation = (parseInt(t.dataset.rotate) || 0) * Math.PI / 180;
+                        var curve = (parseInt(t.dataset.curve) || 0) * Math.PI / 180;
+                        
+                        ctx.save();
+                        ctx.translate(x, y);
+                        ctx.rotate(rotation);
+                        ctx.transform(1, 0, Math.tan(curve), 1, 0, 0);
+                        ctx.font = 'bold ' + fontSize + 'px Arial';
+                        ctx.fillStyle = t.style.color || '#fff';
+                        ctx.strokeStyle = 'rgba(0,0,0,.8)';
+                        ctx.lineWidth = 2;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.strokeText(t.textContent, 0, 0);
+                        ctx.fillText(t.textContent, 0, 0);
+                        ctx.restore();
+                    });
+                    var link = document.createElement('a');
+                    link.href = canvas.toDataURL('image/png');
+                    link.download = 'safari_ai_text_' + Date.now() + '.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showToast('Downloaded with text!');
+                };
+            };
+            modal.appendChild(dlBtn);
+            
+            var closeBtn = document.createElement('button');
+            closeBtn.textContent = 'Close';
+            closeBtn.style.cssText = 'margin:8px 0 20px;padding:10px 20px;background:#d32f2f;color:#fff;border:none;border-radius:20px;cursor:pointer;font-weight:bold;font-size:13px';
+            closeBtn.onclick = function(){modal.remove();};
+            modal.appendChild(closeBtn);
+            
+            document.body.appendChild(modal);
+        };
         
         wrapper.appendChild(openBtn);
         wrapper.appendChild(downloadBtn);
