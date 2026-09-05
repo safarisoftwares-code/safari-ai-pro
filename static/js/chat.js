@@ -9,7 +9,7 @@ let audioChunks=[];
 let isRecording=false;
 const GUEST_WARNING_THRESHOLD=5;
 
-function convertImageUrls(html){var regex=/(https:\/\/image\.pollinations\.ai\/[^\s<]+)/g;html=html.replace(regex,function(url){return '<img src="'+url+'" style="max-width:100%;border-radius:12px;margin:10px 0">';});return html;}
+function convertImageUrls(html){var regex=/(https:\/\/image\.pollinations\.ai\/[^\s<]+)/g;html=html.replace(regex,function(url){return '<img src="'+url+'" style="max-width:100%;border-radius:12px;margin:10px 0">';});return convertImageUrls(html);}
 function renderMarkdown(text){
     // Extract Pollinations URLs first
     var imageUrls = [];
@@ -95,8 +95,19 @@ function addImageButtons(container){
         openBtn.title = 'Open Full Size';
         openBtn.style.cssText = 'position:absolute;top:10px;left:10px;background:#1565c0;color:#fff;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;font-weight:bold;box-shadow:0 2px 10px rgba(0,0,0,.3);z-index:10';
         openBtn.onclick = function(){
-            window.open(img.src, '_blank');
-        };
+    var modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:9999;display:flex;justify-content:center;align-items:center;padding:20px';
+    var fullImg = document.createElement('img');
+    fullImg.src = img.src;
+    fullImg.style.cssText = 'max-width:100%;max-height:85%;border-radius:12px';
+    modal.appendChild(fullImg);
+    var urlBar = document.createElement('div');
+    urlBar.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#d2691e;color:#fff;padding:8px 20px;border-radius:20px;font-size:11px;z-index:10000';
+    urlBar.textContent = 'https://safari-ai-pro.co.ke/generated-image/' + Date.now() + '.jpg';
+    modal.appendChild(urlBar);
+    modal.onclick = function(){modal.remove();};
+    document.body.appendChild(modal);
+};
         
         wrapper.appendChild(openBtn);
         wrapper.appendChild(downloadBtn);
