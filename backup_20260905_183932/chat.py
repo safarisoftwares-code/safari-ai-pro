@@ -64,22 +64,6 @@ def is_website_question(message: str) -> bool:
     has_safari = any(kw in msg_lower for kw in safari_keywords)
     return has_website and has_safari
 
-@router.get("/generate-image")
-async def generate_image(prompt: str):
-    import httpx
-    import urllib.parse
-    encoded_prompt = urllib.parse.quote(prompt)
-    image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=512&nologo=true"
-    
-    try:
-        response = httpx.get(image_url, timeout=15, follow_redirects=True)
-        if response.status_code == 200:
-            return {"status": "success", "image_url": image_url, "prompt": prompt}
-        else:
-            return {"status": "error", "message": "Could not generate image."}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
 @router.get("/guest-status")
 async def guest_status(request: Request):
     ip = get_client_ip(request)

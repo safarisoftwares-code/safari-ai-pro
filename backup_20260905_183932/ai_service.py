@@ -122,7 +122,7 @@ class AIService:
         "EMOJI ENERGY: Use emojis EVERYWHERE.\n"
         "PERSONALITY: Witty, playful, energetic!\n"
         "SAFETY: Refuse harmful content.\n"
-        "IMAGE GENERATION: If user asks to generate/create/draw/make an image or picture, ALWAYS respond with this EXACT format: Here is your image: https://image.pollinations.ai/prompt/WORDS?width=512&height=512&nologo=true - Replace WORDS with the user request using + for spaces. Example: cow becomes https://image.pollinations.ai/prompt/cow?width=512&height=512&nologo=true - NEVER give Pixabay, Unsplash, or Pexels links. GENERAL: Use Markdown. Never fabricate."
+        "GENERAL: Use Markdown. Never fabricate."
     )
 
     def __init__(self):

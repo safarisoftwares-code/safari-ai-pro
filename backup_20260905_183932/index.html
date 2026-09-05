@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Safari AI Pro - Explore Beyond Limits</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#8b4513">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Safari AI Pro">
+<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+<div class="c">
+<div class="h">
+<span style="font-size:32px">&#x1F981;</span>
+<div style="flex:1;"><h1>Safari AI Pro</h1><p>Explore Beyond Limits</p></div>
+<div class="h-right">
+<span class="guest-badge" id="guestBadge">Guest: 8 queries left</span>
+<span id="userName" style="font-size:13px;"></span>
+<a href="/login" id="loginLink">Login</a>
+<a href="/profile" id="profileLink" style="display:none;">Profile</a>
+<button id="logoutBtn" onclick="logoutUser()" style="display:none;">Logout</button>
+</div>
+</div>
+
+<div class="action-row">
+<span class="chat-history-label">Chat History</span>
+<button class="action-btn" onclick="newChat()" title="New Chat">+ New Chat</button>
+<button class="action-btn action-danger" onclick="if(confirm('Delete ALL chat history?')){clearAllChats();}" title="Clear All Chats">&#128465; Clear All</button>
+<button class="action-btn" onclick="toggleSearch()" title="Search">&#x1F50D; Search</button>
+</div>
+
+<div class="search-bar" id="searchBar" style="display:none;">
+<input type="text" id="searchInput" placeholder="Search in chat history..." oninput="searchChats(this.value)">
+<button onclick="closeSearch()">&times;</button>
+</div>
+<div class="search-results" id="searchResults"></div>
+
+<div class="main-row">
+<div class="sidebar">
+<div class="chat-history-title">Chat History</div>
+<div class="tabs-container">
+<div class="tabs" id="tabs"></div>
+</div>
+</div>
+<div class="chat-area">
+<button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+<div id="b"></div>
+</div>
+</div>
+
+<div class="typing-indicator" id="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
+
+<div class="single-bar">
+<label for="fileInput" class="attach-btn" title="Attach document">&#128206;</label>
+<label for="imageInput" class="attach-btn" title="Attach image">&#128247;</label>
+<button class="attach-btn" id="micBtn" onclick="startRecording()">&#127908;</button>
+<div class="file-preview" id="filePreview" style="display:none;">&#128206; <span id="fileName">file.txt</span><button onclick="clearAttachment()">x</button></div>
+<input type="file" id="fileInput" accept=".txt,.md,.csv,.json,.py,.log,.pdf,.docx" style="display:none;" onchange="selectFile(this)">
+<input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="selectImage(this)">
+<input id="q" placeholder="Type your question or attach a file..." autofocus onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();ask()}">
+<button id="askBtn" onclick="ask()">Ask</button>
+</div>
+
+<div class="f">© 2026 Safari Softwares. All Rights Reserved. | <a href="/about">About</a> | <a href="/terms">Terms</a> | <a href="/privacy">Privacy</a> | <a href="/pricing">Pricing</a> | <a href="/admin">Admin</a> | <a href="/dashboard">Dashboard</a></div>
+</div>
+<button class="feedback-btn" onclick="openFeedback()">💬 Feedback</button>
+<div class="feedback-modal" id="feedbackModal">
+<div class="feedback-content">
+<h3>💬 Send Feedback</h3>
+<p class="feedback-subtitle">Help us improve Safari AI Pro!</p>
+<div class="star-rating" id="starRating">
+<span onclick="setRating(1)">⭐</span>
+<span onclick="setRating(2)">⭐</span>
+<span onclick="setRating(3)">⭐</span>
+<span onclick="setRating(4)">⭐</span>
+<span onclick="setRating(5)">⭐</span>
+</div>
+<input type="text" id="fbName" placeholder="Your name">
+<input type="email" id="fbEmail" placeholder="Your email">
+<select id="fbCategory">
+<option value="general">General Feedback</option>
+<option value="bug">Bug Report</option>
+<option value="feature">Feature Request</option>
+<option value="improvement">Improvement Suggestion</option>
+<option value="other">Other</option>
+</select>
+<textarea id="fbMessage" placeholder="Your feedback..." rows="4"></textarea>
+<button class="fb-submit" onclick="submitFeedback()">Submit Feedback</button>
+<button class="fb-cancel" onclick="closeFeedback()">Cancel</button>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="/static/js/chat.js"></script>
+</body>
+</html>
