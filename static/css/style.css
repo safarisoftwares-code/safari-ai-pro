@@ -168,3 +168,26 @@ body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;min-height:100vh;displ
 @media(max-width:600px){
     .chat-history-title{display:block}
 }
+
+
+/* Hide Chrome PWA install badge */
+body > div[style*='position: fixed'][style*='bottom'] {
+    display: none !important;
+}
+
+
+/* Hide Chrome PWA install badge */
+div[class*='install'], div[id*='install'], .pwa-install-banner, .chrome-install-badge {
+    display: none !important;
+}
+
+
+/* Hide Chrome PWA install badge */
+@media(max-width:600px){
+    div[style*='position: fixed'][style*='bottom'], 
+    div[style*='position:fixed'][style*='bottom'],
+    .pwa-install-banner,
+    chrome-pwa-install-banner {
+        display: none !important;
+    }
+}

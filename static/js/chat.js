@@ -304,3 +304,23 @@ document.addEventListener('click', function(e){
         }
     }
 });
+
+
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/static/sw.js').then(function(reg) {
+            console.log('Service Worker registered!', reg.scope);
+        }).catch(function(err) {
+            console.log('Service Worker registration failed:', err);
+        });
+    });
+}
+
+
+// Prevent Chrome from showing install badge automatically
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+});

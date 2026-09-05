@@ -1,0 +1,15 @@
+self.addEventListener('install', function(e) {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', function(e) {
+    return self.clients.claim();
+});
+
+self.addEventListener('fetch', function(e) {
+    e.respondWith(
+        caches.match(e.request).then(function(response) {
+            return response || fetch(e.request);
+        })
+    );
+});
