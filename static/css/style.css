@@ -55,9 +55,9 @@ body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;min-height:100vh;displ
 /* SINGLE INPUT BAR */
 .single-bar{display:flex;align-items:center;gap:12px;padding:8px 15px;background:#fff;border-top:1px solid #f0e0d0;flex-shrink:0;position:sticky;bottom:0;z-index:100}
 .single-bar .attach-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#f0e0d0;border-radius:50%;cursor:pointer;font-size:16px;flex-shrink:0;border:none}
-.single-bar #q{flex:1;min-width:0;padding:10px 14px;border:2px solid #e0c8a8;border-radius:25px;font-size:14px;outline:0;min-height:40px;font-family:inherit;margin-left:36px}
+.single-bar #q{flex:1;min-width:0;padding:10px 12px;border:2px solid #e0c8a8;border-radius:25px;font-size:14px;outline:0;min-height:40px;font-family:inherit}
 .single-bar #q:focus{border-color:#d2691e}
-.single-bar #askBtn{background:#d2691e;color:#fff;border:0;padding:14px 34px;border-radius:35px;cursor:pointer;font-weight:700;font-size:18px;flex-shrink:0}
+.single-bar #askBtn{background:#d2691e;color:#fff;border:0;padding:12px 20px;border-radius:35px;cursor:pointer;font-weight:700;font-size:16px;flex-shrink:0;white-space:nowrap}
 
 /* FOOTER */
 .f{text-align:center;padding:8px 6px;font-size:9px;color:#999;flex-shrink:0;background:#fff;position:sticky;bottom:0;z-index:100}
