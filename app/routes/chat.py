@@ -228,6 +228,42 @@ async def sync_chats(token: str = Form(...), chats: str = Form(...), db: Session
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@router.get("/my-chats")
+async def get_my_chats(token: str, db: Session = Depends(get_db)):
+    payload = AuthService.decode_access_token(token)
+    if not payload:
+        return {"status": "error", "message": "Invalid token"}
+    email = payload.get("email")
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return {"status": "error", "message": "User not found"}
+    chats = db.query(Chat).filter(Chat.user_id == user.id).order_by(Chat.updated_at.desc()).all()
+    chat_list = []
+    for c in chats:
+        try:
+            messages = json.loads(c.messages)
+        except:
+            messages = []
+        chat_list.append({"session_id": c.session_id, "name": c.title, "messages": messages})
+    return {"status": "success", "chats": chat_list}
+
+@router.delete("/delete-chat")
+async def delete_chat(session_id: str, token: str, db: Session = Depends(get_db)):
+    payload = AuthService.decode_access_token(token)
+    if not payload:
+        return {"status": "error", "message": "Invalid token"}
+    email = payload.get("email")
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return {"status": "error", "message": "User not found"}
+    
+    chat = db.query(Chat).filter(Chat.session_id == session_id, Chat.user_id == user.id).first()
+    if chat:
+        db.delete(chat)
+        db.commit()
+        return {"status": "success", "message": "Chat deleted"}
+    return {"status": "error", "message": "Chat not found"}
+
 @router.get("/history")
 async def get_history(session_id: str, db: Session = Depends(get_db)):
     chat = db.query(Chat).filter(Chat.session_id == session_id).first()
