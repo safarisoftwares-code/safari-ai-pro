@@ -9,325 +9,17 @@ let audioChunks=[];
 let isRecording=false;
 const GUEST_WARNING_THRESHOLD=5;
 
-function convertImageUrls(html){var regex=/(https:\/\/image\.pollinations\.ai\/[^\s<]+)/g;html=html.replace(regex,function(url){return '<img src="'+url+'" style="max-width:100%;border-radius:12px;margin:10px 0">';});return convertImageUrls(html);}
 function renderMarkdown(text){
-    // Extract Pollinations URLs first
-    var imageUrls = [];
-    text = text.replace(/(https:\/\/image\.pollinations\.ai\/[^\s<]+)/g, function(url) {
-        imageUrls.push(url);
-        return '';
-    });
-    
-    var html = '';
     if(typeof marked!=='undefined'){
-        marked.setOptions({breaks:true, gfm:true});
-        html = marked.parse(text);
-    } else {
-        html = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-    
-    // Append images at the end
-    if(imageUrls.length > 0){
-        imageUrls.forEach(function(url) {
-            html += '<img src="' + url + '" style="max-width:100%;border-radius:12px;margin:10px 0;box-shadow:0 5px 20px rgba(0,0,0,.2)">';
-        });
-    }
-    
-    return html;
-}
-function addImageButtons(container){
-    var images = container.querySelectorAll('img');
-    images.forEach(function(img){
-        if(img.parentElement.querySelector('.img-btn-group')) return;
-        
-        var wrapper = document.createElement('div');
-        wrapper.className = 'img-container';
-        img.parentNode.insertBefore(wrapper, img);
-        wrapper.appendChild(img);
-        
-        var overlay = document.createElement('div');
-        overlay.className = 'img-loading-overlay';
-        for(var i = 0; i < 30; i++){
-            var dot = document.createElement('div');
-            dot.className = 'pixel-dot';
-            overlay.appendChild(dot);
+        var html = marked.parse(text);
+        if(typeof MathJax !== 'undefined'){
+            setTimeout(function(){ MathJax.typesetPromise(); }, 150);
         }
-        wrapper.appendChild(overlay);
-        
-        img.onload = function(){overlay.style.display = 'none';var b=document.getElementById('b');if(b)b.scrollTop=b.scrollHeight;};
-        if(img.complete){overlay.style.display = 'none';}
-        
-        var downloadBtn = document.createElement('button');
-        downloadBtn.innerHTML = '&#11015;';
-        downloadBtn.title = 'Download Image';
-        downloadBtn.style.cssText = 'position:absolute;top:10px;right:10px;background:#d2691e;color:#fff;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:bold;z-index:10';
-        downloadBtn.onclick = async function(){
-            try {
-                var response = await fetch(img.src);
-                var blob = await response.blob();
-                var url = URL.createObjectURL(blob);
-                var link = document.createElement('a');
-                link.href = url;
-                link.download = 'safari_ai_pro_' + Date.now() + '.jpg';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                showToast('Image downloaded!');
-            } catch(e) {showToast('Could not download.');}
-        };
-        
-        var openBtn = document.createElement('button');
-        openBtn.innerHTML = '&#9999;&#65039;';
-        openBtn.title = 'Edit Image - Add Text, Rotate, Curve';
-        openBtn.style.cssText = 'position:absolute;top:10px;left:10px;background:#1565c0;color:#fff;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;font-weight:bold;z-index:10';
-        openBtn.onclick = function(){
-            var modal = document.createElement('div');
-            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:9999;display:flex;flex-direction:column;align-items:center;padding:15px;overflow-y:auto;box-sizing:border-box';
-            
-            var imgWrap = document.createElement('div');
-            imgWrap.style.cssText = 'position:relative;display:inline-block;max-width:100%;margin-top:10px';
-            
-            var fullImg = document.createElement('img');
-            fullImg.src = img.src;
-            fullImg.style.cssText = 'width:100%;max-width:500px;border-radius:12px;display:block';
-            imgWrap.appendChild(fullImg);
-            
-            var textLayer = document.createElement('div');
-            textLayer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none';
-            imgWrap.appendChild(textLayer);
-            
-            modal.appendChild(imgWrap);
-            
-            var controls = document.createElement('div');
-            controls.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-top:12px;width:100%;max-width:500px';
-            
-            var inputRow = document.createElement('div');
-            inputRow.style.cssText = 'display:flex;gap:6px';
-            var textInput = document.createElement('input');
-            textInput.type = 'text';
-            textInput.placeholder = 'Type text...';
-            textInput.style.cssText = 'flex:1;padding:10px 14px;border-radius:20px;border:2px solid #d2691e;font-size:13px;outline:0;min-width:0';
-            var addBtn = document.createElement('button');
-            addBtn.textContent = 'Add';
-            addBtn.style.cssText = 'padding:10px 14px;background:#d2691e;color:#fff;border:none;border-radius:20px;cursor:pointer;font-weight:bold;font-size:13px';
-            inputRow.appendChild(textInput);
-            inputRow.appendChild(addBtn);
-            controls.appendChild(inputRow);
-            
-            // Size slider
-            var sizeRow = document.createElement('div');
-            sizeRow.style.cssText = 'display:flex;align-items:center;gap:6px';
-            var sizeLabel = document.createElement('span');
-            sizeLabel.textContent = 'Size';
-            sizeLabel.style.cssText = 'color:#fff;font-size:11px;min-width:35px';
-            var sizeInput = document.createElement('input');
-            sizeInput.type = 'range';
-            sizeInput.min = '10'; sizeInput.max = '100'; sizeInput.value = '24';
-            sizeInput.style.cssText = 'flex:1';
-            sizeRow.appendChild(sizeLabel);
-            sizeRow.appendChild(sizeInput);
-            controls.appendChild(sizeRow);
-            
-            // Rotation slider 0-360
-            var rotRow = document.createElement('div');
-            rotRow.style.cssText = 'display:flex;align-items:center;gap:6px';
-            var rotLabel = document.createElement('span');
-            rotLabel.textContent = 'Rotate';
-            rotLabel.style.cssText = 'color:#fff;font-size:11px;min-width:35px';
-            var rotInput = document.createElement('input');
-            rotInput.type = 'range';
-            rotInput.min = '0'; rotInput.max = '360'; rotInput.value = '0';
-            rotInput.style.cssText = 'flex:1';
-            var rotVal = document.createElement('span');
-            rotVal.textContent = '0°';
-            rotVal.style.cssText = 'color:#fff;font-size:11px;min-width:35px;text-align:right';
-            rotRow.appendChild(rotLabel);
-            rotRow.appendChild(rotInput);
-            rotRow.appendChild(rotVal);
-            controls.appendChild(rotRow);
-            
-            // Curve slider
-            var curveRow = document.createElement('div');
-            curveRow.style.cssText = 'display:flex;align-items:center;gap:6px';
-            var curveLabel = document.createElement('span');
-            curveLabel.textContent = 'Curve';
-            curveLabel.style.cssText = 'color:#fff;font-size:11px;min-width:35px';
-            var curveInput = document.createElement('input');
-            curveInput.type = 'range';
-            curveInput.min = '-100'; curveInput.max = '100'; curveInput.value = '0';
-            curveInput.style.cssText = 'flex:1';
-            var curveVal = document.createElement('span');
-            curveVal.textContent = '0';
-            curveVal.style.cssText = 'color:#fff;font-size:11px;min-width:35px;text-align:right';
-            curveRow.appendChild(curveLabel);
-            curveRow.appendChild(curveInput);
-            curveRow.appendChild(curveVal);
-            controls.appendChild(curveRow);
-            
-            // Color
-            var colorRow = document.createElement('div');
-            colorRow.style.cssText = 'display:flex;align-items:center;gap:6px';
-            var colorLabel = document.createElement('span');
-            colorLabel.textContent = 'Color';
-            colorLabel.style.cssText = 'color:#fff;font-size:11px;min-width:35px';
-            var colorPicker = document.createElement('input');
-            colorPicker.type = 'color';
-            colorPicker.value = '#ffffff';
-            colorPicker.style.cssText = 'width:35px;height:30px;border:none;border-radius:5px;cursor:pointer;background:none';
-            colorRow.appendChild(colorLabel);
-            colorRow.appendChild(colorPicker);
-            controls.appendChild(colorRow);
-            
-            modal.appendChild(controls);
-            
-            var selectedText = null;
-            
-            addBtn.onclick = function(){
-                var txt = textInput.value.trim();
-                if(!txt) return;
-                
-                var textEl = document.createElement('div');
-                textEl.textContent = txt;
-                textEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:24px;font-weight:bold;text-shadow:2px 2px 8px rgba(0,0,0,.9);cursor:move;pointer-events:auto;white-space:nowrap;user-select:none;font-family:Arial,sans-serif';
-                textEl.dataset.rotate = '0';
-                textEl.dataset.curve = '0';
-                textLayer.appendChild(textEl);
-                textInput.value = '';
-                
-                textEl.onclick = function(e){
-                    e.stopPropagation();
-                    selectedText = textEl;
-                    sizeInput.value = parseInt(textEl.style.fontSize) || 24;
-                    rotInput.value = textEl.dataset.rotate || 0;
-                    rotVal.textContent = (textEl.dataset.rotate || 0) + '°';
-                    curveInput.value = textEl.dataset.curve || 0;
-                    curveVal.textContent = textEl.dataset.curve || 0;
-                };
-                
-                // Drag
-                var dragging = false, sx, sy, ox, oy;
-                textEl.onmousedown = function(e){
-                    dragging = true; sx = e.clientX; sy = e.clientY;
-                    ox = textEl.offsetLeft; oy = textEl.offsetTop;
-                    e.preventDefault();
-                };
-                document.onmousemove = function(e){
-                    if(dragging){
-                        textEl.style.left = (ox + e.clientX - sx) + 'px';
-                        textEl.style.top = (oy + e.clientY - sy) + 'px';
-                        applyTransform(textEl);
-                    }
-                };
-                document.onmouseup = function(){dragging = false;};
-                
-                textEl.ontouchstart = function(e){
-                    dragging = true; var t = e.touches[0];
-                    sx = t.clientX; sy = t.clientY;
-                    ox = textEl.offsetLeft; oy = textEl.offsetTop;
-                };
-                document.ontouchmove = function(e){
-                    if(dragging){
-                        var t = e.touches[0];
-                        textEl.style.left = (ox + t.clientX - sx) + 'px';
-                        textEl.style.top = (oy + t.clientY - sy) + 'px';
-                        applyTransform(textEl);
-                        e.preventDefault();
-                    }
-                };
-                document.ontouchend = function(){dragging = false;};
-            };
-            
-            function applyTransform(el){
-                var rot = el.dataset.rotate || 0;
-                var curve = el.dataset.curve || 0;
-                var curveCSS = curve != 0 ? ' transform:rotate(' + rot + 'deg) skewX(' + curve + 'deg);' : ' transform:rotate(' + rot + 'deg);';
-                el.style.cssText = el.style.cssText.replace(/transform:[^;]+;/g, '');
-                el.style.transform = 'rotate(' + rot + 'deg)' + (curve != 0 ? ' skewX(' + curve + 'deg)' : '');
-            }
-            
-            sizeInput.oninput = function(){
-                if(selectedText) selectedText.style.fontSize = this.value + 'px';
-            };
-            rotInput.oninput = function(){
-                rotVal.textContent = this.value + '°';
-                if(selectedText){
-                    selectedText.dataset.rotate = this.value;
-                    applyTransform(selectedText);
-                }
-            };
-            curveInput.oninput = function(){
-                curveVal.textContent = this.value;
-                if(selectedText){
-                    selectedText.dataset.curve = this.value;
-                    applyTransform(selectedText);
-                }
-            };
-            colorPicker.oninput = function(){
-                if(selectedText) selectedText.style.color = this.value;
-            };
-            
-            // Download with text
-            var dlBtn = document.createElement('button');
-            dlBtn.textContent = 'Download with Text';
-            dlBtn.style.cssText = 'margin-top:10px;padding:12px 20px;background:#2e7d32;color:#fff;border:none;border-radius:20px;cursor:pointer;font-weight:bold;font-size:14px;width:100%;max-width:500px';
-            dlBtn.onclick = function(){
-                var canvas = document.createElement('canvas');
-                canvas.width = fullImg.naturalWidth || 500;
-                canvas.height = fullImg.naturalHeight || 500;
-                var ctx = canvas.getContext('2d');
-                var tempImg = new Image();
-                tempImg.crossOrigin = 'anonymous';
-                tempImg.src = fullImg.src;
-                tempImg.onload = function(){
-                    ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
-                    var texts = textLayer.querySelectorAll('div');
-                    texts.forEach(function(t){
-                        var ratioX = canvas.width / fullImg.width;
-                        var ratioY = canvas.height / fullImg.height;
-                        var x = (t.offsetLeft + t.offsetWidth/2) * ratioX;
-                        var y = (t.offsetTop + t.offsetHeight/2) * ratioY;
-                        var fontSize = parseInt(t.style.fontSize) * ratioX;
-                        var rotation = (parseInt(t.dataset.rotate) || 0) * Math.PI / 180;
-                        var curve = (parseInt(t.dataset.curve) || 0) * Math.PI / 180;
-                        
-                        ctx.save();
-                        ctx.translate(x, y);
-                        ctx.rotate(rotation);
-                        ctx.transform(1, 0, Math.tan(curve), 1, 0, 0);
-                        ctx.font = 'bold ' + fontSize + 'px Arial';
-                        ctx.fillStyle = t.style.color || '#fff';
-                        ctx.strokeStyle = 'rgba(0,0,0,.8)';
-                        ctx.lineWidth = 2;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.strokeText(t.textContent, 0, 0);
-                        ctx.fillText(t.textContent, 0, 0);
-                        ctx.restore();
-                    });
-                    var link = document.createElement('a');
-                    link.href = canvas.toDataURL('image/png');
-                    link.download = 'safari_ai_text_' + Date.now() + '.png';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    showToast('Downloaded with text!');
-                };
-            };
-            modal.appendChild(dlBtn);
-            
-            var closeBtn = document.createElement('button');
-            closeBtn.textContent = 'Close';
-            closeBtn.style.cssText = 'margin:8px 0 20px;padding:10px 20px;background:#d32f2f;color:#fff;border:none;border-radius:20px;cursor:pointer;font-weight:bold;font-size:13px';
-            closeBtn.onclick = function(){modal.remove();};
-            modal.appendChild(closeBtn);
-            
-            document.body.appendChild(modal);
-        };
-        
-        wrapper.appendChild(openBtn);
-        wrapper.appendChild(downloadBtn);
-    });
+        return html;
+    }
+    return text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
 function addCodeButtons(container){
     var codeBlocks=container.querySelectorAll('pre code');
     codeBlocks.forEach(function(codeBlock,i){
@@ -512,38 +204,19 @@ function loadChats(){try{var saved=localStorage.getItem('safari_pro_chats');if(s
 function saveChats(){try{localStorage.setItem('safari_pro_chats',JSON.stringify(chats));}catch(e){}syncChatsToServer();}
 window.syncChatsToServer=async function(){try{var token=localStorage.getItem('safari_token');if(!token)return;var fd=new FormData();fd.append('token',token);fd.append('chats',JSON.stringify(chats));await fetch('/api/v1/chat/sync',{method:'POST',body:fd});}catch(e){}}
 function getChatPreview(messages){if(!messages||messages.length===0)return'New Chat';for(var i=0;i<messages.length;i++){if(messages[i].startsWith('U:'))return messages[i].substring(2).substring(0,30);}return'Chat';}
-function renderTabs(){var tabs=document.getElementById('tabs');if(!tabs)return;tabs.innerHTML='';var chatIds=Object.keys(chats);var realIds=chatIds.filter(function(id){return chats[id].messages&&chats[id].messages.length>0;});var visibleIds=realIds.slice(-3);var hiddenIds=realIds.slice(0,-3);visibleIds.forEach(function(id){var chat=chats[id];if(!chat.name||chat.name==='New Chat'){chat.name=getChatPreview(chat.messages);}if(chat.name==='New Chat')return;var tab=document.createElement('div');tab.className='tab'+(id===activeChat?' active':'');var nameSpan=document.createElement('span');nameSpan.className='tab-name';nameSpan.textContent=chat.name.length>20?chat.name.substring(0,20)+'...':chat.name;tab.appendChild(nameSpan);tab.addEventListener('click',function(e){if(e.target.classList.contains('del')||e.target.classList.contains('rename-btn'))return;switchChat(id);});if(realIds.length>1){var renameBtn=document.createElement('span');renameBtn.className='rename-btn';renameBtn.textContent='R';renameBtn.title='Rename';renameBtn.addEventListener('click',function(e){e.stopPropagation();renameChatTab(id);});tab.appendChild(renameBtn);var del=document.createElement('span');del.className='del';del.textContent='x';del.title='Delete';del.addEventListener('click',function(e){e.stopPropagation();if(confirm('Delete this chat?')){deleteChat(id);}});tab.appendChild(del);}tabs.appendChild(tab);});if(hiddenIds.length>0){var showMore=document.createElement('div');showMore.className='tab';showMore.textContent='? More ('+hiddenIds.length+')';showMore.style.cssText='text-align:center;font-weight:bold;color:#8b4513;background:#f0e0d0;cursor:pointer;padding:8px;border-radius:8px;margin:4px 0';showMore.addEventListener('click',function(e){e.stopPropagation();showAllChats();});tabs.appendChild(showMore);}}
-window.showAllChats=function(){var tabs=document.getElementById('tabs');if(!tabs)return;tabs.innerHTML='';var chatIds=Object.keys(chats);chatIds.forEach(function(id){var chat=chats[id];var tab=document.createElement('div');tab.className='tab'+(id===activeChat?' active':'');var nameSpan=document.createElement('span');nameSpan.className='tab-name';nameSpan.textContent=(chat.name||'Chat').substring(0,20);tab.appendChild(nameSpan);tab.addEventListener('click',function(){switchChat(id);});if(realIds.length>1){var del=document.createElement('span');del.className='del';del.textContent='x';del.addEventListener('click',function(e){e.stopPropagation();if(confirm('Delete this chat?')){deleteChat(id);}});tab.appendChild(del);}tabs.appendChild(tab);});var backBtn=document.createElement('div');backBtn.className='tab';backBtn.textContent='? Show Recent';backBtn.style.cssText='text-align:center;font-weight:bold;color:#8b4513;background:#f0e0d0;cursor:pointer;padding:8px;border-radius:8px;margin:4px 0';backBtn.addEventListener('click',function(){renderTabs();});tabs.appendChild(backBtn);};
+function renderTabs(){var tabs=document.getElementById('tabs');if(!tabs)return;tabs.innerHTML='';var chatIds=Object.keys(chats);var realIds=chatIds.filter(function(id){return chats[id].messages&&chats[id].messages.length>0;});var visibleIds=realIds.slice(-3);var hiddenIds=realIds.slice(0,-3);visibleIds.forEach(function(id){var chat=chats[id];if(!chat.name||chat.name==='New Chat'){chat.name=getChatPreview(chat.messages);}if(chat.name==='New Chat')return;var tab=document.createElement('div');tab.className='tab'+(id===activeChat?' active':'');var nameSpan=document.createElement('span');nameSpan.className='tab-name';nameSpan.textContent=chat.name.length>20?chat.name.substring(0,20)+'...':chat.name;tab.appendChild(nameSpan);tab.addEventListener('click',function(e){if(e.target.classList.contains('del')||e.target.classList.contains('rename-btn'))return;switchChat(id);});if(chatIds.length>1){var renameBtn=document.createElement('span');renameBtn.className='rename-btn';renameBtn.textContent='R';renameBtn.title='Rename';renameBtn.addEventListener('click',function(e){e.stopPropagation();renameChatTab(id);});tab.appendChild(renameBtn);var del=document.createElement('span');del.className='del';del.textContent='x';del.title='Delete';del.addEventListener('click',function(e){e.stopPropagation();if(confirm('Delete this chat?')){deleteChat(id);}});tab.appendChild(del);}tabs.appendChild(tab);});if(hiddenIds.length>0){var showMore=document.createElement('div');showMore.className='tab';showMore.textContent='▼ More ('+hiddenIds.length+')';showMore.style.cssText='text-align:center;font-weight:bold;color:#8b4513;background:#f0e0d0;cursor:pointer;padding:8px;border-radius:8px;margin:4px 0';showMore.addEventListener('click',function(e){e.stopPropagation();showAllChats();});tabs.appendChild(showMore);}}
+window.showAllChats=function(){var tabs=document.getElementById('tabs');if(!tabs)return;tabs.innerHTML='';var chatIds=Object.keys(chats);chatIds.forEach(function(id){var chat=chats[id];var tab=document.createElement('div');tab.className='tab'+(id===activeChat?' active':'');var nameSpan=document.createElement('span');nameSpan.className='tab-name';nameSpan.textContent=(chat.name||'Chat').substring(0,20);tab.appendChild(nameSpan);tab.addEventListener('click',function(){switchChat(id);});if(chatIds.length>1){var del=document.createElement('span');del.className='del';del.textContent='x';del.addEventListener('click',function(e){e.stopPropagation();if(confirm('Delete this chat?')){deleteChat(id);}});tab.appendChild(del);}tabs.appendChild(tab);});var backBtn=document.createElement('div');backBtn.className='tab';backBtn.textContent='▲ Show Recent';backBtn.style.cssText='text-align:center;font-weight:bold;color:#8b4513;background:#f0e0d0;cursor:pointer;padding:8px;border-radius:8px;margin:4px 0';backBtn.addEventListener('click',function(){renderTabs();});tabs.appendChild(backBtn);};
 function renameChatTab(id){var chat=chats[id];var newName=prompt('Enter new name:',chat.name||'New Chat');if(newName&&newName.trim()){chat.name=newName.trim();saveChats();renderTabs();}}
 function switchChat(id){activeChat=id;renderTabs();renderMessages();var sidebar=document.querySelector('.sidebar');if(sidebar){sidebar.classList.remove('show');}}
 window.newChat=function(){var chatIds=Object.keys(chats);for(var i=0;i<chatIds.length;i++){var c=chats[chatIds[i]];if(!c.messages||c.messages.length===0){activeChat=chatIds[i];renderTabs();renderMessages();return;}}var id='chat_'+Date.now();chats[id]={name:'New Chat',messages:[],timestamps:[]};activeChat=id;saveChats();renderTabs();renderMessages();}
-window.showAllChats=function(){var tabs=document.getElementById('tabs');if(!tabs)return;tabs.innerHTML='';var chatIds=Object.keys(chats);chatIds.forEach(function(id){var chat=chats[id];var tab=document.createElement('div');tab.className='tab'+(id===activeChat?' active':'');var nameSpan=document.createElement('span');nameSpan.className='tab-name';nameSpan.textContent=(chat.name||'Chat').substring(0,20);tab.appendChild(nameSpan);tab.addEventListener('click',function(){switchChat(id);});if(realIds.length>1){var del=document.createElement('span');del.className='del';del.textContent='x';del.addEventListener('click',function(e){e.stopPropagation();if(confirm('Delete this chat?')){deleteChat(id);}});tab.appendChild(del);}tabs.appendChild(tab);});var backBtn=document.createElement('div');backBtn.className='tab';backBtn.textContent='? Show Recent';backBtn.style.cssText='text-align:center;font-weight:bold;color:#8b4513;background:#f0e0d0;cursor:pointer;padding:6px';backBtn.addEventListener('click',function(){renderTabs();});tabs.appendChild(backBtn);};
-window.clearAllChats=async function(){
-    var token = localStorage.getItem('safari_token');
-    if(token){
-        var ids = Object.keys(chats);
-        for(var i = 0; i < ids.length; i++){
-            try {
-                await fetch('/api/v1/chat/delete-chat?session_id=' + ids[i] + '&token=' + encodeURIComponent(token), {method:'DELETE'});
-            } catch(e) {}
-        }
-    }
-if(confirm('Final confirmation: Delete ALL chats?')){chats={};var id='chat_'+Date.now();chats[id]={name:'New Chat',messages:[],timestamps:[]};activeChat=id;saveChats();renderTabs();renderMessages();showToast('All chats cleared!');}}
-async function deleteChat(id){
-    var token = localStorage.getItem('safari_token');
-    if(token){
-        try {
-            await fetch('/api/v1/chat/delete-chat?session_id=' + id + '&token=' + encodeURIComponent(token), {method:'DELETE'});
-        } catch(e) {
-            console.log('Delete from server error:', e);
-        }
-    }
-if(Object.keys(chats).length<=1){showToast('Cannot delete last chat');return;}delete chats[id];saveChats();if(activeChat===id){activeChat=Object.keys(chats)[0];}renderTabs();renderMessages();showToast('Chat deleted');}
+window.showAllChats=function(){var tabs=document.getElementById('tabs');if(!tabs)return;tabs.innerHTML='';var chatIds=Object.keys(chats);chatIds.forEach(function(id){var chat=chats[id];var tab=document.createElement('div');tab.className='tab'+(id===activeChat?' active':'');var nameSpan=document.createElement('span');nameSpan.className='tab-name';nameSpan.textContent=(chat.name||'Chat').substring(0,20);tab.appendChild(nameSpan);tab.addEventListener('click',function(){switchChat(id);});if(chatIds.length>1){var del=document.createElement('span');del.className='del';del.textContent='x';del.addEventListener('click',function(e){e.stopPropagation();if(confirm('Delete this chat?')){deleteChat(id);}});tab.appendChild(del);}tabs.appendChild(tab);});var backBtn=document.createElement('div');backBtn.className='tab';backBtn.textContent='▲ Show Recent';backBtn.style.cssText='text-align:center;font-weight:bold;color:#8b4513;background:#f0e0d0;cursor:pointer;padding:6px';backBtn.addEventListener('click',function(){renderTabs();});tabs.appendChild(backBtn);};
+window.clearAllChats=function(){if(confirm('Final confirmation: Delete ALL chats?')){chats={};var id='chat_'+Date.now();chats[id]={name:'New Chat',messages:[],timestamps:[]};activeChat=id;saveChats();renderTabs();renderMessages();showToast('All chats cleared!');}}
+function deleteChat(id){if(Object.keys(chats).length<=1){showToast('Cannot delete last chat');return;}delete chats[id];saveChats();if(activeChat===id){activeChat=Object.keys(chats)[0];}renderTabs();renderMessages();showToast('Chat deleted');}
 function copyMessage(text,btn){navigator.clipboard.writeText(text).then(function(){btn.innerHTML='&#9989;';setTimeout(function(){btn.innerHTML='&#128203;';},1500);showToast('Copied!');});}
 function editMessage(index,msgDiv){var chat=chats[activeChat];var msg=chat.messages[index];var content=msg.substring(2);var editDiv=document.createElement('div');editDiv.className='m u';editDiv.style.width='75%';var input=document.createElement('textarea');input.className='edit-input';input.value=content;input.rows=Math.min(5,content.split('\n').length);editDiv.appendChild(input);var actions=document.createElement('div');actions.className='edit-actions';var saveBtn=document.createElement('button');saveBtn.className='btn-save';saveBtn.textContent='Save';saveBtn.onclick=function(){var newContent=input.value.trim();if(newContent){chat.messages=chat.messages.slice(0,index);chat.timestamps=chat.timestamps.slice(0,index);chat.messages.push('U:'+newContent);chat.timestamps.push(Date.now());saveChats();renderMessages();setProcessing(true);sendEditedMessage(newContent);}};var cancelBtn=document.createElement('button');cancelBtn.className='btn-cancel';cancelBtn.textContent='Cancel';cancelBtn.onclick=function(){renderMessages();};actions.appendChild(saveBtn);actions.appendChild(cancelBtn);editDiv.appendChild(actions);msgDiv.parentElement.replaceChild(editDiv,msgDiv);input.focus();}
 async function sendEditedMessage(question){try{var form=new FormData();form.append('question',question);form.append('session_id',activeChat);var token=localStorage.getItem('safari_token');if(token)form.append('token',token);var r=await fetch('/api/v1/chat/ask',{method:'POST',body:form});var d=await r.json();var errMsg=d.response||d.detail||JSON.stringify(d);chats[activeChat].messages.push('S:'+errMsg);chats[activeChat].timestamps.push(Date.now());}catch(e){chats[activeChat].messages.push('S:Connection error.');chats[activeChat].timestamps.push(Date.now());}saveChats();renderMessages();setProcessing(false);}
-function addWarningToChat(remaining){var box=document.getElementById('b');var wrapper=document.createElement('div');wrapper.className='m-wrapper bot';wrapper.innerHTML='<div class="warning-msg">Warning: You have '+remaining+' free queries left. <a href="/login">Login now</a> for unlimited access.</div>';box.appendChild(wrapper);box.scrollTop = box.scrollHeight;if(!chats[activeChat])return;chats[activeChat].messages.push('W:'+remaining);chats[activeChat].timestamps.push(Date.now());saveChats();}
-function renderMessages(){var box=document.getElementById('b');if(!box)return;box.innerHTML='';if(!activeChat||!chats[activeChat])return;var msgs=chats[activeChat].messages||[];var times=chats[activeChat].timestamps||[];if(msgs.length===0){box.innerHTML='<div class="m s" style="max-width:60%">&#x1F981; Hello! Ask me anything or attach a file!</div>';}msgs.forEach(function(m,i){var wrapper=document.createElement('div');if(m.startsWith('U:')){wrapper.className='m-wrapper user';var msgDiv=document.createElement('div');msgDiv.className='m u';msgDiv.textContent=m.substring(2);wrapper.appendChild(msgDiv);var actions=document.createElement('div');actions.className='msg-actions';var editBtn=document.createElement('button');editBtn.className='msg-action-btn btn-edit';editBtn.innerHTML='&#128394;';editBtn.title='Edit';editBtn.style.background='#ff9800';editBtn.style.color='#fff';editBtn.onclick=function(){editMessage(i,msgDiv);};actions.appendChild(editBtn);wrapper.appendChild(actions);}else if(m.startsWith('S:')){wrapper.className='m-wrapper bot';var msgDiv2=document.createElement('div');msgDiv2.className='m s markdown-body doc-download-ready';msgDiv2.innerHTML=renderMarkdown(m.substring(2));wrapper.appendChild(msgDiv2);var actions2=document.createElement('div');actions2.className='msg-actions';var copyBtn=document.createElement('button');copyBtn.className='msg-action-btn btn-copy';copyBtn.innerHTML='&#128203;';copyBtn.title='Copy';copyBtn.onclick=function(){copyMessage(m.substring(2),copyBtn);};actions2.appendChild(copyBtn);wrapper.appendChild(actions2);}else if(m.startsWith('W:')){wrapper.className='m-wrapper bot';wrapper.innerHTML='<div class="warning-msg">Warning: You have '+m.substring(2)+' free queries left. <a href="/login">Login now</a> for unlimited access.</div>';}if(times[i]){var timeStamp=document.createElement('div');timeStamp.className='time-stamp';timeStamp.textContent=new Date(times[i]).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});wrapper.appendChild(timeStamp);}box.appendChild(wrapper);});addCodeButtons(box);addDocumentButtons(box);addImageButtons(box);if(typeof MathJax !== 'undefined'){MathJax.typesetPromise();}box.scrollTop = box.scrollHeight;}
+function addWarningToChat(remaining){var box=document.getElementById('b');var wrapper=document.createElement('div');wrapper.className='m-wrapper bot';wrapper.innerHTML='<div class="warning-msg">Warning: You have '+remaining+' free queries left. <a href="/login">Login now</a> for unlimited access.</div>';box.appendChild(wrapper);box.scrollTop=box.scrollHeight;if(!chats[activeChat])return;chats[activeChat].messages.push('W:'+remaining);chats[activeChat].timestamps.push(Date.now());saveChats();}
+function renderMessages(){var box=document.getElementById('b');if(!box)return;box.innerHTML='';if(!activeChat||!chats[activeChat])return;var msgs=chats[activeChat].messages||[];var times=chats[activeChat].timestamps||[];if(msgs.length===0){box.innerHTML='<div class="m s" style="max-width:60%">&#x1F981; Hello! Ask me anything or attach a file!</div>';}msgs.forEach(function(m,i){var wrapper=document.createElement('div');if(m.startsWith('U:')){wrapper.className='m-wrapper user';var msgDiv=document.createElement('div');msgDiv.className='m u';msgDiv.textContent=m.substring(2);wrapper.appendChild(msgDiv);var actions=document.createElement('div');actions.className='msg-actions';var editBtn=document.createElement('button');editBtn.className='msg-action-btn btn-edit';editBtn.innerHTML='&#128394;';editBtn.title='Edit';editBtn.style.background='#ff9800';editBtn.style.color='#fff';editBtn.onclick=function(){editMessage(i,msgDiv);};actions.appendChild(editBtn);wrapper.appendChild(actions);}else if(m.startsWith('S:')){wrapper.className='m-wrapper bot';var msgDiv2=document.createElement('div');msgDiv2.className='m s markdown-body doc-download-ready';msgDiv2.innerHTML=renderMarkdown(m.substring(2));wrapper.appendChild(msgDiv2);var actions2=document.createElement('div');actions2.className='msg-actions';var copyBtn=document.createElement('button');copyBtn.className='msg-action-btn btn-copy';copyBtn.innerHTML='&#128203;';copyBtn.title='Copy';copyBtn.onclick=function(){copyMessage(m.substring(2),copyBtn);};actions2.appendChild(copyBtn);wrapper.appendChild(actions2);}else if(m.startsWith('W:')){wrapper.className='m-wrapper bot';wrapper.innerHTML='<div class="warning-msg">Warning: You have '+m.substring(2)+' free queries left. <a href="/login">Login now</a> for unlimited access.</div>';}if(times[i]){var timeStamp=document.createElement('div');timeStamp.className='time-stamp';timeStamp.textContent=new Date(times[i]).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});wrapper.appendChild(timeStamp);}box.appendChild(wrapper);});addCodeButtons(box);addDocumentButtons(box);if(typeof MathJax !== 'undefined'){MathJax.typesetPromise();}box.scrollTop=box.scrollHeight;}
 function setProcessing(state){isProcessing=state;var btn=document.getElementById('askBtn');var typing=document.getElementById('typing');if(state){btn.disabled=true;btn.textContent='Thinking...';typing.classList.add('show');}else{btn.disabled=false;btn.textContent='Ask';typing.classList.remove('show');}}
 async function ask(){if(isProcessing)return;var input=document.getElementById('q');var question=input.value.trim();if(!question&&!pendingFile&&!pendingImage)return;if(question.length>2000){showToast('Message too long.');return;}if(!activeChat||!chats[activeChat])newChat();if(!chats[activeChat].messages)chats[activeChat].messages=[];if(!chats[activeChat].timestamps)chats[activeChat].timestamps=[];var displayText=question;if(pendingImage){displayText=question?question+' [Image: '+pendingImage.name+']':'[Image: '+pendingImage.name+']';}else if(pendingFile){displayText=question?question+' [Attached: '+pendingFile.name+']':'[Attached: '+pendingFile.name+']';}chats[activeChat].messages.push('U:'+displayText);chats[activeChat].timestamps.push(Date.now());saveChats();renderTabs();renderMessages();input.value='';var preview=document.getElementById('filePreview');preview.style.display='none';var imgPreview=document.getElementById('imagePreview');if(imgPreview)imgPreview.style.display='none';setProcessing(true);try{if(pendingImage){var imgForm=new FormData();imgForm.append('session_id',activeChat);imgForm.append('question',question||'Please analyze this image');imgForm.append('image',pendingImage);
 imgForm.append('use_ocr','true');var token=localStorage.getItem('safari_token');if(token)imgForm.append('token',token);var imgResp=await fetch('/api/v1/chat/ask',{method:'POST',body:imgForm});var imgData=await imgResp.json();var imgErr=imgData.response||imgData.detail||JSON.stringify(imgData);chats[activeChat].messages.push('S:'+imgErr);chats[activeChat].timestamps.push(Date.now());pendingImage=null;}else if(pendingFile){var uploadForm=new FormData();uploadForm.append('session_id',activeChat);uploadForm.append('file',pendingFile);var uploadResp=await fetch('/api/v1/upload/',{method:'POST',body:uploadForm});var uploadData=await uploadResp.json();if(uploadData.status==='success'){var askForm=new FormData();askForm.append('session_id',activeChat);var fileContent = uploadData.preview || '';
@@ -560,41 +233,7 @@ preview.style.display='flex';}
 var imgPreview=document.getElementById('imagePreview');if(imgPreview)imgPreview.style.display='none';showToast('Image ready. Type question and Ask.');}
 function clearAttachment(){pendingFile=null;pendingImage=null;var input=document.getElementById('fileInput');if(input)input.value='';var imgInput=document.getElementById('imageInput');if(imgInput)imgInput.value='';document.getElementById('filePreview').style.display='none';var imgPreview=document.getElementById('imagePreview');if(imgPreview)imgPreview.style.display='none';showToast('Attachment removed.');}
 document.addEventListener('keydown',function(e){if(e.ctrlKey&&e.key==='f'){e.preventDefault();toggleSearch();}});
-async function loadChatsFromServer(){
-    var token = localStorage.getItem('safari_token');
-    if(!token) return;
-    try {
-        var r = await fetch('/api/v1/chat/my-chats?token=' + encodeURIComponent(token));
-        var d = await r.json();
-        if(d.status === 'success'){
-            // REPLACE local chats with server chats
-            var serverChats = {};
-            d.chats.forEach(function(c){
-                serverChats[c.session_id] = {
-                    name: c.name,
-                    messages: c.messages || [],
-                    timestamps: (c.messages || []).map(function(){ return Date.now(); })
-                };
-            });
-            
-            // If server has no chats, create a new empty chat
-            if(Object.keys(serverChats).length === 0){
-                var newId = 'chat_' + Date.now();
-                serverChats[newId] = {name:'New Chat', messages:[], timestamps:[]};
-            }
-            
-            chats = serverChats;
-            activeChat = Object.keys(chats)[0];
-            localStorage.setItem('safari_pro_chats', JSON.stringify(chats));
-            renderTabs();
-            renderMessages();
-        }
-    } catch(e) {
-        console.log('Load chats error:', e);
-    }
-}
-
-document.addEventListener('DOMContentLoaded',function(){loadChatsFromServer();fetchGuestStatus();loadChats();var chatIds=Object.keys(chats);var existingEmpty=null;for(var i=0;i<chatIds.length;i++){var c=chats[chatIds[i]];if(!c.messages||c.messages.length===0){existingEmpty=chatIds[i];break;}}if(existingEmpty){activeChat=existingEmpty;}else{activeChat='chat_'+Date.now();chats[activeChat]={name:'New Chat',messages:[],timestamps:[]};saveChats();}renderTabs();renderMessages();});
+document.addEventListener('DOMContentLoaded',function(){fetchGuestStatus();loadChats();var chatIds=Object.keys(chats);var existingEmpty=null;for(var i=0;i<chatIds.length;i++){var c=chats[chatIds[i]];if(!c.messages||c.messages.length===0){existingEmpty=chatIds[i];break;}}if(existingEmpty){activeChat=existingEmpty;}else{activeChat='chat_'+Date.now();chats[activeChat]={name:'New Chat',messages:[],timestamps:[]};saveChats();}renderTabs();renderMessages();});
 
 
 window.toggleSidebar=function(){
@@ -651,7 +290,7 @@ async function submitFeedback(){
         var r = await fetch('/api/v1/feedback/submit', {method:'POST', body:fd});
         var d = await r.json();
         if(d.status === 'success'){
-            showToast('Feedback sent! Thank you! ??');
+            showToast('Feedback sent! Thank you! 🦁');
             closeFeedback();
             document.getElementById('fbMessage').value = '';
             document.getElementById('fbEmail').value = '';
