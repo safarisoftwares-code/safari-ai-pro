@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Document Generator - Safari AI Pro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+.form-box{background:#fff;max-width:500px;padding:35px;border-radius:15px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+h1{color:#8b4513;font-size:22px;text-align:center;margin-bottom:5px}
+.subtitle{color:#888;font-size:12px;text-align:center;margin-bottom:20px}
+label{display:block;font-size:12px;color:#555;margin-bottom:5px;font-weight:600}
+input,textarea,select{width:100%;padding:10px 12px;border:2px solid #e0c8a8;border-radius:8px;font-size:13px;margin-bottom:12px;outline:0;font-family:inherit}
+input:focus,textarea:focus,select:focus{border-color:#d2691e}
+button{width:100%;padding:12px;background:#d2691e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:14px}
+button:hover{background:#8b4513}
+.back{text-align:center;margin-top:15px}
+.back a{color:#d2691e;text-decoration:none;font-size:12px}
+</style>
+</head>
+<body>
+<div class="form-box">
+<h1>📄 Document Generator</h1>
+<p class="subtitle">Choose document type and fill details</p>
+<form action="/api/v1/documents/generate" method="post">
+
+<label>Document Type</label>
+<select name="doc_type" id="docType" onchange="toggleFields()">
+<option value="certificate">Certificate</option>
+<option value="recommendation">Recommendation Letter</option>
+<option value="proposal">Business Proposal</option>
+</select>
+
+<div id="certFields">
+<label>Name</label>
+<input type="text" name="name" placeholder="e.g. John Ndolo">
+<label>Achievement</label>
+<textarea name="achievement" rows="3" placeholder="e.g. For outstanding achievement in Chemistry"></textarea>
+<label>Quote (optional)</label>
+<input type="text" name="quote" placeholder="Optional quote">
+</div>
+
+<div id="letterFields" style="display:none">
+<label>Your Name</label>
+<input type="text" name="your_name" placeholder="e.g. John Ndolo">
+<label>Your Position</label>
+<input type="text" name="your_position" placeholder="e.g. CEO">
+<label>Candidate Name</label>
+<input type="text" name="candidate_name" placeholder="e.g. Jane Mwangi">
+<label>Candidate Position</label>
+<input type="text" name="candidate_position" placeholder="e.g. Developer">
+<label>Duration</label>
+<input type="text" name="duration" placeholder="e.g. Jan 2024 - Aug 2026">
+<label>Achievement</label>
+<textarea name="achievement" rows="3" placeholder="Key achievement"></textarea>
+</div>
+
+<button type="submit">Generate Document</button>
+</form>
+<div class="back"><a href="/">Back to Chat</a></div>
+</div>
+<script>
+function toggleFields(){
+    var type = document.getElementById('docType').value;
+    document.getElementById('certFields').style.display = type === 'certificate' ? 'block' : 'none';
+    document.getElementById('letterFields').style.display = type === 'recommendation' ? 'block' : 'none';
+}
+</script>
+</body>
+</html>

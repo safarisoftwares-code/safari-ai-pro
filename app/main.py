@@ -12,7 +12,7 @@ import os
 from app.config import settings
 from app.database import init_db, get_db
 from app.models import User, Chat, APIKey
-from app.routes import auth, chat, admin, upload, feedback
+from app.routes import auth, chat, admin, upload, feedback, documents
 from app.middleware.rate_limit import RateLimitMiddleware
 
 init_db()
@@ -28,6 +28,7 @@ app.include_router(chat.router)
 app.include_router(admin.router)
 app.include_router(upload.router)
 app.include_router(feedback.router)
+app.include_router(documents.router)
 
 @app.get("/", response_class=HTMLResponse)
 async def home():
