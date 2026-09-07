@@ -7,7 +7,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',sans-serif;background:#f5e6d3;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-.form-box{background:#fff;max-width:500px;padding:35px;border-radius:15px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.form-box{background:#fff;max-width:600px;padding:35px;border-radius:15px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 h1{color:#8b4513;font-size:22px;text-align:center;margin-bottom:5px}
 .subtitle{color:#888;font-size:12px;text-align:center;margin-bottom:20px}
 label{display:block;font-size:12px;color:#555;margin-bottom:5px;font-weight:600}
@@ -54,21 +54,94 @@ button:hover{background:#8b4513}
 <label>Location</label>
 <input type="text" name="location" placeholder="e.g. Nairobi, Kenya">
 
-<input type="text" name="your_position" placeholder="e.g. CEO">
 <label>Candidate Name</label>
 <input type="text" name="candidate_name" placeholder="e.g. Jane Mwangi">
+
 <label>Gender</label>
 <select name="gender">
 <option value="his">Male (His)</option>
 <option value="her">Female (Her)</option>
 <option value="their">Neutral (Their)</option>
 </select>
+
 <label>Candidate Position</label>
 <input type="text" name="candidate_position" placeholder="e.g. Developer">
+
 <label>Duration</label>
 <input type="text" name="duration" placeholder="e.g. Jan 2024 - Aug 2026">
+
 <label>Achievement</label>
 <textarea name="achievement" rows="3" placeholder="Key achievement"></textarea>
+</div>
+
+<div id="proposalFields" style="display:none">
+<label>Provider Name</label>
+<input type="text" name="provider_name" placeholder="e.g. John Ndolo">
+
+<label>Provider Company</label>
+<input type="text" name="provider_company" placeholder="e.g. Safari Softwares">
+
+<label>Provider Email</label>
+<input type="email" name="provider_email" placeholder="e.g. info@company.com">
+
+<label>Provider Phone</label>
+<input type="tel" name="provider_phone" placeholder="e.g. +254 7XX XXX XXX">
+
+<label>Client Name</label>
+<input type="text" name="client_name" placeholder="e.g. John Ndolo">
+
+<label>Client Company</label>
+<input type="text" name="client_company" placeholder="e.g. Acme Ltd">
+
+<label>Client Email</label>
+<input type="email" name="client_email" placeholder="e.g. client@company.com">
+
+<label>Client Phone</label>
+<input type="tel" name="client_phone" placeholder="e.g. +254 7XX XXX XXX">
+
+<label>Project Title</label>
+<input type="text" name="project_title" placeholder="e.g. E-Commerce Website">
+
+<label>Executive Summary</label>
+<textarea name="executive_summary" rows="3" placeholder="Brief overview of the project"></textarea>
+
+<label>Problem Statement</label>
+<textarea name="problem_statement" rows="3" placeholder="What problem are you solving?"></textarea>
+
+<label>Proposed Solution</label>
+<textarea name="solution" rows="3" placeholder="How will you solve it?"></textarea>
+
+<label>Scope of Work</label>
+<textarea name="scope" rows="4" placeholder="What's included in the project"></textarea>
+
+<label>Timeline Start</label>
+<input type="date" name="timeline_start">
+
+<label>Timeline End</label>
+<input type="date" name="timeline_end">
+
+<label>Budget Amount</label>
+<input type="number" name="budget" placeholder="e.g. 500000">
+
+<label>Currency</label>
+<select name="currency">
+<option value="KSh">KSh (Kenya)</option>
+<option value="USD">USD ($)</option>
+<option value="EUR">EUR (€)</option>
+<option value="GBP">GBP (£)</option>
+</select>
+
+<label>Payment Terms</label>
+<input type="text" name="payment_terms" placeholder="e.g. 50% upfront, 50% on delivery">
+
+<label>Validity (days)</label>
+<input type="number" name="validity" placeholder="e.g. 30">
+
+<label>Contact Email</label>
+<input type="email" name="contact_email" placeholder="e.g. you@company.com">
+
+<label>Contact Phone</label>
+<input type="tel" name="contact_phone" placeholder="e.g. +254 7XX XXX XXX">
 </div>
 
 <button type="submit">Generate Document</button>
@@ -80,6 +153,7 @@ function toggleFields(){
     var type = document.getElementById('docType').value;
     document.getElementById('certFields').style.display = type === 'certificate' ? 'block' : 'none';
     document.getElementById('letterFields').style.display = type === 'recommendation' ? 'block' : 'none';
+    document.getElementById('proposalFields').style.display = type === 'proposal' ? 'block' : 'none';
 }
 </script>
 </body>

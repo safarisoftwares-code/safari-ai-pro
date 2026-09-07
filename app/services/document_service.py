@@ -50,7 +50,7 @@ h1{{color:#8b4513;font-size:28px;letter-spacing:2px;margin-bottom:10px}}
 <div class="sign-label">Recipient</div>
 </div>
 </div>
-<a href="#" class="download-btn" onclick="window.print()">Download PDF / Print</a>
+<a href="/" style="display:inline-block;margin-top:20px;margin-right:10px;padding:10px 20px;background:#f0e0d0;color:#8b4513;border:none;border-radius:25px;cursor:pointer;font-weight:bold;font-size:13px;text-decoration:none">← Back to Chat</a> <a href="#" class="download-btn" onclick="window.print()">Download PDF / Print</a>
 </div>
 </body>
 </html>'''
@@ -99,7 +99,7 @@ Nairobi, Kenya
 <p>Sincerely,</p>
 <p style="margin-top:30px"><strong>{your_name}</strong><br>{your_position}<br>{organization}</p>
 </div>
-<a href="#" class="download-btn" onclick="window.print()">Download PDF / Print</a>
+<a href="/" style="display:inline-block;margin-top:20px;margin-right:10px;padding:10px 20px;background:#f0e0d0;color:#8b4513;border:none;border-radius:25px;cursor:pointer;font-weight:bold;font-size:13px;text-decoration:none">← Back to Chat</a> <a href="#" class="download-btn" onclick="window.print()">Download PDF / Print</a>
 </div>
 </body>
 </html>'''
@@ -138,7 +138,74 @@ p{{color:#333;font-size:14px;line-height:1.7}}
 <div class="highlight">Contact us for a detailed quote tailored to your requirements.</div>
 <h2>Next Steps</h2>
 <p>We would be happy to schedule a discovery call to discuss your project in detail.</p>
-<a href="#" class="download-btn" onclick="window.print()">Download PDF / Print</a>
+<a href="/" style="display:inline-block;margin-top:20px;margin-right:10px;padding:10px 20px;background:#f0e0d0;color:#8b4513;border:none;border-radius:25px;cursor:pointer;font-weight:bold;font-size:13px;text-decoration:none">← Back to Chat</a> <a href="#" class="download-btn" onclick="window.print()">Download PDF / Print</a>
+</div>
+</body>
+</html>'''
+    @staticmethod
+    def generate_proposal_robust(client_name, client_company, project_title, executive_summary, problem_statement, solution, scope, timeline_start, timeline_end, budget, currency, payment_terms, validity, contact_email, contact_phone, provider_name="", provider_company="", provider_email="", provider_phone=""):
+        date = datetime.now().strftime("%B %d, %Y")
+        
+        return f'''<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Proposal - {project_title}</title>
+<style>
+body{{font-family:'Segoe UI',sans-serif;background:#f5e6d3;padding:20px;margin:0}}
+.proposal{{background:#fff;max-width:800px;margin:auto;padding:40px;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.15)}}
+h1{{color:#8b4513;font-size:26px;border-bottom:3px solid #d2691e;padding-bottom:10px}}
+h2{{color:#d2691e;font-size:18px;margin-top:25px}}
+p{{color:#333;font-size:14px;line-height:1.7}}
+table{{width:100%;border-collapse:collapse;margin:15px 0;font-size:13px}}
+th{{background:#d2691e;color:#fff;padding:10px;text-align:left}}
+td{{padding:8px;border-bottom:1px solid #e0c8a8}}
+.highlight{{background:#faf5f0;border-left:4px solid #d2691e;padding:12px;margin:15px 0}}
+.download-btn{{display:inline-block;margin-top:30px;padding:12px 24px;background:#d2691e;color:#fff;border:none;border-radius:25px;cursor:pointer;font-weight:bold;font-size:14px}}
+@media print{{body{{background:#fff}}.download-btn{{display:none}}}}
+</style>
+</head>
+<body>
+<div class="proposal">
+<h1>BUSINESS PROPOSAL</h1>
+<p><strong>Project:</strong> {project_title}</p>
+<p><strong>Prepared By:</strong> {provider_name}, {provider_company}<br><strong>Prepared For:</strong> {client_name}, {client_company}</p>
+<p><strong>Date:</strong> {date}</p>
+
+<h2>1. Executive Summary</h2>
+<p>{executive_summary}</p>
+
+<h2>2. Problem Statement</h2>
+<p>{problem_statement}</p>
+
+<h2>3. Proposed Solution</h2>
+<p>{solution}</p>
+
+<h2>4. Scope of Work</h2>
+<p>{scope}</p>
+
+<h2>5. Timeline</h2>
+<table>
+<tr><th>Phase</th><th>Date</th></tr>
+<tr><td>Start Date</td><td>{timeline_start}</td></tr>
+<tr><td>End Date</td><td>{timeline_end}</td></tr>
+</table>
+
+<h2>6. Investment</h2>
+<div class="highlight">
+<p><strong>Total Budget:</strong> {currency} {budget}</p>
+<p><strong>Payment Terms:</strong> {payment_terms}</p>
+<p><strong>Proposal Validity:</strong> {validity} days</p>
+</div>
+
+<h2>7. Next Steps</h2>
+<p>We would be happy to schedule a discovery call to discuss this proposal in detail.</p>
+
+<h2>8. Contact</h2>
+<p><strong>Provider:</strong> {provider_name} - {provider_email} | {provider_phone}</p>
+<p><strong>Client:</strong> {client_name} - {contact_email} | {contact_phone}</p>
+
+<a href="/" style="display:inline-block;margin-top:20px;margin-right:10px;padding:10px 20px;background:#f0e0d0;color:#8b4513;border:none;border-radius:25px;cursor:pointer;font-weight:bold;font-size:13px;text-decoration:none">← Back to Chat</a> <a href="#" class="download-btn" onclick="window.print()">Download PDF / Print</a>
 </div>
 </body>
 </html>'''
