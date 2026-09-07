@@ -21,12 +21,14 @@ async def generate_document(
     achievement: str = Form(default=""),
     date: str = Form(default=""),
     quote: str = Form(default=""),
-    details: str = Form(default="")
+    details: str = Form(default=""),
+    gender: str = Form(default="their"),
+    location: str = Form(default="Nairobi, Kenya")
 ):
     if doc_type == "certificate":
         return HTMLResponse(DocumentService.generate_certificate(name, achievement, date, quote))
     elif doc_type == "recommendation":
-        return HTMLResponse(DocumentService.generate_recommendation(your_name, your_position, candidate_name, candidate_position, organization, duration, achievement))
+        return HTMLResponse(DocumentService.generate_recommendation(your_name, your_position, candidate_name, candidate_position, organization, duration, achievement, gender, location))
     elif doc_type == "proposal":
         return HTMLResponse(DocumentService.generate_proposal(name, "Custom Service", details))
     else:

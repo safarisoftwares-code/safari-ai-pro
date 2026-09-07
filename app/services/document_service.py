@@ -56,7 +56,7 @@ h1{{color:#8b4513;font-size:28px;letter-spacing:2px;margin-bottom:10px}}
 </html>'''
 
     @staticmethod
-    def generate_recommendation(your_name, your_position, candidate_name, candidate_position, organization, duration, achievement):
+    def generate_recommendation(your_name, your_position, candidate_name, candidate_position, organization, duration, achievement, gender="their", location="Nairobi, Kenya"):
         date = datetime.now().strftime("%B %d, %Y")
         
         return f'''<!DOCTYPE html>
@@ -91,7 +91,7 @@ Nairobi, Kenya
 <p class="salutation">To Whom It May Concern,</p>
 <div class="body-text">
 <p>I am delighted to write this recommendation for <strong>{candidate_name}</strong>, who served as <strong>{candidate_position}</strong> at <strong>{organization}</strong> from <strong>{duration}</strong>.</p>
-<p>During their time with us, {candidate_name} consistently demonstrated exceptional professionalism, technical expertise, and dedication. Their most notable achievement was {achievement}.</p>
+<p>During {gender} time with us, {candidate_name} consistently demonstrated exceptional professionalism, technical expertise, and dedication. {gender.capitalize()} most notable achievement was {achievement}.</p>
 <p>{candidate_name} possesses strong problem-solving skills, works well in teams, and shows remarkable initiative. They would be a valuable asset to any organization.</p>
 <p>I wholeheartedly recommend {candidate_name} without reservation. Please feel free to contact me if you need any further information.</p>
 </div>
