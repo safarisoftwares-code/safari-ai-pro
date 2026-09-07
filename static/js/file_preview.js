@@ -1,4 +1,4 @@
-﻿// File Preview Module - shows 20 lines with dropdown
+﻿// File Preview Module
 function showFilePreview(file) {
     var reader = new FileReader();
     reader.onload = function(e) {
@@ -9,7 +9,6 @@ function showFilePreview(file) {
         
         var previewBox = document.createElement('div');
         previewBox.style.cssText = 'position:fixed;bottom:60px;left:10px;right:10px;background:#fff;border:2px solid #d2691e;border-radius:10px;padding:10px;max-height:250px;overflow-y:auto;z-index:100;font-size:11px;box-shadow:0 5px 20px rgba(0,0,0,.3)';
-        
         previewBox.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:5px"><strong style="color:#8b4513">' + file.name + '</strong><span style="color:#888;font-size:10px">' + lines.length + ' lines</span></div>';
         
         var content = document.createElement('pre');
