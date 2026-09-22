@@ -66,7 +66,7 @@ async def privacy_page():
 async def pricing_page():
     return FileResponse("templates/pricing.html")
 
-@app.get("/admin", response_class=HTMLResponse)
+@app.get("/safari-control-2026", response_class=HTMLResponse)
 async def admin_page(pw: str = "", db: Session = Depends(get_db)):
     if not settings.ADMIN_PASSWORD or pw != settings.ADMIN_PASSWORD:
         return """<!DOCTYPE html>
@@ -85,7 +85,7 @@ button[type=submit]{background:#d2691e;color:#fff;border:0;padding:14px;border-r
 </style>
 </head>
 <body>
-<form method="get" action="/admin">
+<form method="get" action="/safari-control-2026">
 <h2>&#x1F981; Admin Login</h2>
 <div class="pw-wrapper">
 <input type="password" id="pwInput" name="pw" placeholder="Admin password" required>
@@ -106,7 +106,7 @@ button[type=submit]{background:#d2691e;color:#fff;border:0;padding:14px;border-r
     for u in users:
         status = "Banned" if u.is_banned else "Active"
         status_color = "red" if u.is_banned else "green"
-        action = f'<a href="/admin/ban?email={u.email}&pw={pw}" style="color:red">Ban</a>' if not u.is_banned else f'<a href="/admin/unban?email={u.email}&pw={pw}" style="color:green">Unban</a>'
+        action = f'<a href="/safari-control-2026/ban?email={u.email}&pw={pw}" style="color:red">Ban</a>' if not u.is_banned else f'<a href="/safari-control-2026/unban?email={u.email}&pw={pw}" style="color:green">Unban</a>'
         user_rows += f"<tr><td>{u.name}</td><td>{u.email}</td><td>{u.plan}</td><td>{u.queries_today}/{u.daily_limit}</td><td>{u.total_queries}</td><td style='color:{status_color}'>{status}</td><td>{action}</td></tr>"
     
     feedback_rows = ""
@@ -131,7 +131,7 @@ button[type=submit]{background:#d2691e;color:#fff;border:0;padding:14px;border-r
             <td>0/{k.daily_limit}</td>
             <td>0</td>
             <td><code id="key_{k.id}">{k.key}</code> <button onclick="copyKey('key_{k.id}')" style="background:#2e7d32;color:#fff;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px">Copy</button> <button onclick="printKey('key_{k.id}')" style="background:#1565c0;color:#fff;border:none;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px">Print</button></td>
-            <td><form method='post' action='/admin/revoke-key' style='display:inline' onsubmit='return confirm(\"Revoke this API key?\")'><input type='hidden' name='key' value='{k.key}'><input type='hidden' name='pw' value='{pw}'><button type='submit' style='background:#d32f2f;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer'>Revoke</button></form></td>
+            <td><form method='post' action='/safari-control-2026/revoke-key' style='display:inline' onsubmit='return confirm(\"Revoke this API key?\")'><input type='hidden' name='key' value='{k.key}'><input type='hidden' name='pw' value='{pw}'><button type='submit' style='background:#d32f2f;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer'>Revoke</button></form></td>
         </tr>"""
     
     return f"""<!DOCTYPE html>
@@ -182,7 +182,7 @@ code{{background:#f0e0d0;padding:3px 8px;border-radius:4px;font-size:12px}}
 
 <div class="form-section">
 <h3>Generate New API Key</h3>
-<form method="post" action="/admin/generate">
+<form method="post" action="/safari-control-2026/generate">
 <div class="form-row">
 <input type="hidden" name="pw" value="{pw}">
 <input type="email" name="email" placeholder="User email address" required>
@@ -248,47 +248,47 @@ function printKey(elementId) {{
 </script>
 </body></html>"""
 
-@app.post("/admin/generate")
+@app.post("/safari-control-2026/generate")
 async def admin_generate(email: str = Form(...), plan: str = Form(default="free"), pw: str = Form(...), db: Session = Depends(get_db)):
     if not settings.ADMIN_PASSWORD or pw != settings.ADMIN_PASSWORD:
-        return RedirectResponse("/admin")
+        return RedirectResponse("/safari-control-2026")
     api_key = hashlib.sha256(f"{email}{time.time()}".encode()).hexdigest()[:32]
     limit_map = {"free": 10, "pro": 1000, "enterprise": 10000}
     user = db.query(User).filter(User.email == email).first()
     new_key = APIKey(key=api_key, email=email, user_id=user.id if user else None, plan=plan, daily_limit=limit_map.get(plan, 10), is_active=True)
     db.add(new_key)
     db.commit()
-    return RedirectResponse(f"/admin?pw={pw}", status_code=303)
+    return RedirectResponse(f"/safari-control-2026?pw={pw}", status_code=303)
 
-@app.post("/admin/revoke-key")
+@app.post("/safari-control-2026/revoke-key")
 async def admin_revoke_key(key: str = Form(...), pw: str = Form(...), db: Session = Depends(get_db)):
     if not settings.ADMIN_PASSWORD or pw != settings.ADMIN_PASSWORD:
-        return RedirectResponse("/admin")
+        return RedirectResponse("/safari-control-2026")
     api_key = db.query(APIKey).filter(APIKey.key == key).first()
     if api_key:
         db.delete(api_key)
         db.commit()
-    return RedirectResponse(f"/admin?pw={pw}", status_code=303)
+    return RedirectResponse(f"/safari-control-2026?pw={pw}", status_code=303)
 
-@app.get("/admin/ban")
+@app.get("/safari-control-2026/ban")
 async def admin_ban(email: str = "", pw: str = "", db: Session = Depends(get_db)):
     if not settings.ADMIN_PASSWORD or pw != settings.ADMIN_PASSWORD:
-        return RedirectResponse("/admin")
+        return RedirectResponse("/safari-control-2026")
     user = db.query(User).filter(User.email == email).first()
     if user:
         user.is_banned = True
         db.commit()
-    return RedirectResponse(f"/admin?pw={pw}")
+    return RedirectResponse(f"/safari-control-2026?pw={pw}")
 
-@app.get("/admin/unban")
+@app.get("/safari-control-2026/unban")
 async def admin_unban(email: str = "", pw: str = "", db: Session = Depends(get_db)):
     if not settings.ADMIN_PASSWORD or pw != settings.ADMIN_PASSWORD:
-        return RedirectResponse("/admin")
+        return RedirectResponse("/safari-control-2026")
     user = db.query(User).filter(User.email == email).first()
     if user:
         user.is_banned = False
         db.commit()
-    return RedirectResponse(f"/admin?pw={pw}")
+    return RedirectResponse(f"/safari-control-2026?pw={pw}")
 
 @app.get("/health")
 async def health():
