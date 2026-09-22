@@ -309,3 +309,5 @@ async def sitemap():
 async def robots():
     with open("static/robots.txt", "r", encoding="utf-8") as f:
         return PlainTextResponse(content=f.read())
+
+# SEO routes deployed 2026-09-22
