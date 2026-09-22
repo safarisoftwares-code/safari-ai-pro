@@ -293,3 +293,19 @@ async def admin_unban(email: str = "", pw: str = "", db: Session = Depends(get_d
 @app.get("/health")
 async def health():
     return {"status":"ok","service":settings.APP_NAME,"version":settings.APP_VERSION,"timestamp":datetime.now().isoformat()}
+
+# ============================================
+# SEO ROUTES
+# ============================================
+from fastapi.responses import PlainTextResponse, Response as RawResponse
+
+@app.get("/sitemap.xml")
+async def sitemap():
+    with open("static/sitemap.xml", "r", encoding="utf-8") as f:
+        return RawResponse(content=f.read(), media_type="application/xml",
+                           headers={"Cache-Control": "public, max-age=3600"})
+
+@app.get("/robots.txt")
+async def robots():
+    with open("static/robots.txt", "r", encoding="utf-8") as f:
+        return PlainTextResponse(content=f.read())
